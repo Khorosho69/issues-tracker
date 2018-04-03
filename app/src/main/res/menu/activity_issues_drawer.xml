@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_add_issue"
+            android:icon="@drawable/ic_add_issue_black"
+            android:title="@string/nav_menu_add_new_issue_text" />
+        <item
+            android:id="@+id/nav_user_issues"
+            android:icon="@drawable/ic_issues_list_black"
+            android:title="@string/nav_menu_user_issues_list_title"/>
+    </group>
+
+    <group>
+        <item
+            android:id="@+id/nav_logout"
+            android:title="@string/nav_menu_log_out_text" />
+    </group>
+</menu>
