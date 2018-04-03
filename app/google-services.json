@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "829430894625",
+    "firebase_url": "https://issues-tracker-e9dd0.firebaseio.com",
+    "project_id": "issues-tracker-e9dd0",
+    "storage_bucket": "issues-tracker-e9dd0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829430894625:android:b13b582ee6fea345",
+        "android_client_info": {
+          "package_name": "com.antont.issuestracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "829430894625-j82s1pe25ss05c1dls8u2uipbruai0or.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.antont.issuestracker",
+            "certificate_hash": "640cdcd18b4ae5f21af21e15653cc0464ffc1d8a"
+          }
+        },
+        {
+          "client_id": "829430894625-o4ekb2rhbh46inmt7ih56h18dj454bbf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEmDlcDtnCHXg4_LTk-I6yIzkd1j4AMOs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "829430894625-o4ekb2rhbh46inmt7ih56h18dj454bbf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
