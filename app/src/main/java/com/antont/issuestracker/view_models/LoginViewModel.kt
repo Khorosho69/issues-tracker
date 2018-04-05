@@ -3,7 +3,6 @@ package com.antont.issuestracker.view_models
 import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 import com.antont.issuestracker.R
 import com.antont.issuestracker.activities.IssuesActivity
@@ -34,7 +33,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { task: Task<AuthResult> ->
             run {
                 if (task.isSuccessful) {
-                    starMainActivity()
+                    starIssuesActivity()
                 } else {
                     Toast.makeText(getApplication<Application>().applicationContext, "Authorization error.", Toast.LENGTH_SHORT).show()
                 }
@@ -45,7 +44,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     fun isUserAuthorized(): Boolean {
         val user = FirebaseAuth.getInstance().currentUser
         user?.let {
-            starMainActivity()
+            starIssuesActivity()
             return true
         } ?: return false
     }
@@ -66,8 +65,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         return Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
     }
 
-    private fun starMainActivity() {
+    private fun starIssuesActivity() {
         val intent = Intent(getApplication<Application>().applicationContext, IssuesActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         getApplication<Application>().startActivity(intent)
     }
 

@@ -1,35 +1,44 @@
 package com.antont.issuestracker.activities
 
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.LinearLayout
 import com.antont.issuestracker.R
+import com.antont.issuestracker.adapters.RecyclerViewAdapter
+import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.view_models.IssuesViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_issues.*
 import kotlinx.android.synthetic.main.app_bar_issues.*
+import kotlinx.android.synthetic.main.content_issues.*
 import kotlinx.android.synthetic.main.nav_header_issues.view.*
 
 class IssuesActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private lateinit var issuesActivityViewModel: IssuesViewModel
+    private lateinit var issuesViewModel: IssuesViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_issues)
         setSupportActionBar(toolbar)
 
-        issuesActivityViewModel = ViewModelProviders.of(this).get(IssuesViewModel::class.java)
+        showProgress(true)
+
+        issuesViewModel = ViewModelProviders.of(this).get(IssuesViewModel::class.java)
+
+        issuesViewModel.issueList.observe(this, Observer { t -> t?.let { setupRecyclerView(it) } })
 
         updateNavigationHeaderItems()
 
@@ -44,6 +53,19 @@ class IssuesActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         toggle.syncState()
 
         navigationView.setNavigationItemSelectedListener(this)
+        issuesViewModel.getIssuesData()
+    }
+
+    private fun setupRecyclerView(users: MutableList<Issue>) {
+        showProgress(false)
+        users_recycler_view.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
+        val adapter = RecyclerViewAdapter(users)
+        users_recycler_view.adapter = adapter
+    }
+
+    private fun showProgress(isLoading: Boolean) {
+        users_recycler_view.visibility = if (isLoading) View.GONE else View.VISIBLE
+        issues_progress_bar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     private fun updateNavigationHeaderItems() {
@@ -57,8 +79,8 @@ class IssuesActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
                     .placeholder(R.drawable.ic_launcher_background)
                     .into(navigationHeaderView.navigationHeaderProfilePicture)
 
-            navigationHeaderView.navigationHeaderUserName.text = user.displayName
-            navigationHeaderView.navigationHeaderEmail.text = user.email
+            navigationHeaderView.navigation_header_user_name.text = user.displayName
+            navigationHeaderView.navigation_header_email.text = user.email
         }
     }
 
@@ -92,7 +114,7 @@ class IssuesActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
 
             }
             R.id.nav_logout -> {
-                startLoginActivity()
+                issuesViewModel.startLoginActivity()
             }
         }
 
@@ -100,23 +122,5 @@ class IssuesActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         return true
     }
 
-    private fun startLoginActivity() {
-        logoutFromAccount()
 
-        val intent = Intent(this, LoginActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
-    }
-
-    private fun logoutFromAccount(){
-        FirebaseAuth.getInstance().signOut()
-
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build()
-
-        val client = GoogleSignIn.getClient(this, gso)
-        client.signOut()
-        client.revokeAccess()
-    }
 }
