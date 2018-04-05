@@ -5,7 +5,7 @@ import android.arch.lifecycle.AndroidViewModel
 import android.content.Intent
 import android.widget.Toast
 import com.antont.issuestracker.R
-import com.antont.issuestracker.activities.IssuesActivity
+import com.antont.issuestracker.activities.MainActivity
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.GoogleApiClient
@@ -66,7 +66,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun starIssuesActivity() {
-        val intent = Intent(getApplication<Application>().applicationContext, IssuesActivity::class.java)
+        val intent = Intent(getApplication<Application>().applicationContext, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         getApplication<Application>().startActivity(intent)
     }

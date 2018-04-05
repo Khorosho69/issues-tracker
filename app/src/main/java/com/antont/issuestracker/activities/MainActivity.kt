@@ -1,6 +1,5 @@
 package com.antont.issuestracker.activities
 
-import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -8,37 +7,27 @@ import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.LinearLayout
 import com.antont.issuestracker.R
-import com.antont.issuestracker.adapters.RecyclerViewAdapter
-import com.antont.issuestracker.models.Issue
+import com.antont.issuestracker.fragments.IssueListFragment
 import com.antont.issuestracker.view_models.IssuesViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.activity_issues.*
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_issues.*
-import kotlinx.android.synthetic.main.content_issues.*
 import kotlinx.android.synthetic.main.nav_header_issues.view.*
 
-class IssuesActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private lateinit var issuesViewModel: IssuesViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_issues)
+        setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        showProgress(true)
-
         issuesViewModel = ViewModelProviders.of(this).get(IssuesViewModel::class.java)
-
-        issuesViewModel.issueList.observe(this, Observer { t -> t?.let { setupRecyclerView(it) } })
 
         updateNavigationHeaderItems()
 
@@ -53,19 +42,13 @@ class IssuesActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelec
         toggle.syncState()
 
         navigationView.setNavigationItemSelectedListener(this)
-        issuesViewModel.getIssuesData()
-    }
 
-    private fun setupRecyclerView(users: MutableList<Issue>) {
-        showProgress(false)
-        users_recycler_view.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
-        val adapter = RecyclerViewAdapter(users)
-        users_recycler_view.adapter = adapter
-    }
-
-    private fun showProgress(isLoading: Boolean) {
-        users_recycler_view.visibility = if (isLoading) View.GONE else View.VISIBLE
-        issues_progress_bar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        if (savedInstanceState == null) {
+            supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.issues_frame, IssueListFragment(), IssueListFragment.FRAGMENT_TAG)
+                    .commit()
+        }
     }
 
     private fun updateNavigationHeaderItems() {

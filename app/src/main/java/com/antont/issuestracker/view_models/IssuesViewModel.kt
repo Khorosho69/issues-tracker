@@ -6,7 +6,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.content.Intent
 import android.widget.Toast
 import com.antont.issuestracker.activities.LoginActivity
-import com.antont.issuestracker.models.Comments
+import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.models.User
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -19,7 +19,7 @@ import com.google.firebase.database.ValueEventListener
 
 class IssuesViewModel(application: Application) : AndroidViewModel(application) {
 
-    var issueList: MutableLiveData<MutableList<Issue>> = MutableLiveData()
+    val issueList: MutableLiveData<MutableList<Issue>> = MutableLiveData()
 
     fun startLoginActivity() {
         logoutFromAccount()
@@ -71,10 +71,10 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         return Issue(owner, status, description, date, comments, null)
     }
 
-    private fun getCommentsFromDataSnapshot(data: DataSnapshot): MutableList<Comments> {
-        val comments: MutableList<Comments> = mutableListOf()
+    private fun getCommentsFromDataSnapshot(data: DataSnapshot): MutableList<Comment> {
+        val comments: MutableList<Comment> = mutableListOf()
         for (t: DataSnapshot? in data.children) {
-            comments.add(t?.getValue(Comments::class.java)!!)
+            comments.add(t?.getValue(Comment::class.java)!!)
         }
         return comments
     }
@@ -95,7 +95,6 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
                     } else {
                         issueList.value = issues
                     }
-
                 }
             }
         })

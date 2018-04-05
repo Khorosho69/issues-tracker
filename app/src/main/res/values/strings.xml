@@ -11,4 +11,7 @@
     <string name="nav_menu_settings_title">Settings</string>
     <string name="nav_menu_add_new_issue_text">Add new issue</string>
     <string name="nav_menu_user_issues_list_title">User issues list</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
