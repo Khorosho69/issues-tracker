@@ -11,8 +11,7 @@ import com.antont.issuestracker.R.id.*
 import com.antont.issuestracker.models.Issue
 import com.squareup.picasso.Picasso
 
-class RecyclerViewAdapter(private val issues: MutableList<Issue>) : RecyclerView.Adapter<RecyclerViewAdapter.UserViewHolder>() {
-
+class IssuesViewAdapter(private val issues: MutableList<Issue>, private val listener: OnItemSelectedCallback) : RecyclerView.Adapter<IssuesViewAdapter.UserViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.issue_item_layout, parent, false)
@@ -20,12 +19,15 @@ class RecyclerViewAdapter(private val issues: MutableList<Issue>) : RecyclerView
     }
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
+        holder.itemView.setOnClickListener { listener.onItemSelected(position) }
+
         Picasso.get()
-                .load(issues[position].owner?.profilePictUrl)
+                .load(issues[position].ownerRef?.profilePictUrl)
                 .placeholder(R.drawable.profile_image_placeholder)
                 .into(holder.imageView)
+
         holder.issueDescription.text = issues[position].description
-        holder.issueOwner.text = "From: ${issues[position].owner?.name}"
+        holder.issueOwner.text = "From: ${issues[position].ownerRef?.name}"
         issues[position].comments?.let {
             holder.commentsCount.text = it.size.toString()
         } ?: run {
@@ -38,9 +40,14 @@ class RecyclerViewAdapter(private val issues: MutableList<Issue>) : RecyclerView
     }
 
     class UserViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
         val imageView: ImageView = view.findViewById(issue_item_image)
         val issueDescription: TextView = view.findViewById(issue_item_description)
         val commentsCount: TextView = view.findViewById(issue_item_message_count_view)
         val issueOwner: TextView = view.findViewById(issue_item_owner_name)
+    }
+
+    interface OnItemSelectedCallback {
+        fun onItemSelected(issuePosition: Int)
     }
 }

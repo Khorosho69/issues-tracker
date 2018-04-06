@@ -4,8 +4,12 @@ import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
 import android.content.Intent
+import android.support.v4.app.FragmentManager
 import android.widget.Toast
+import com.antont.issuestracker.R
 import com.antont.issuestracker.activities.LoginActivity
+import com.antont.issuestracker.fragments.IssueDetailFragment
+import com.antont.issuestracker.fragments.IssueListFragment
 import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.models.User
@@ -21,12 +25,125 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
 
     val issueList: MutableLiveData<MutableList<Issue>> = MutableLiveData()
 
-    fun startLoginActivity() {
-        logoutFromAccount()
+    fun initialize() {
+        isUserExist()
+        getIssuesData()
+    }
 
-        val intent = Intent(getApplication<Application>().applicationContext, LoginActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        getApplication<Application>().applicationContext.startActivity(intent)
+    fun getIssuesData() {
+        val issues: MutableList<Issue> = mutableListOf()
+
+        val ref = FirebaseDatabase.getInstance().reference.child("issues")
+
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onCancelled(databaseError: DatabaseError?) {
+                databaseError?.let { onRequestCanceled(it) }
+            }
+
+            override fun onDataChange(dataSnapshot: DataSnapshot?) {
+                dataSnapshot?.let {
+                    for (t: DataSnapshot? in dataSnapshot.children) {
+                        t?.let { it1 -> issues.add(getIssueFromDataSnapshot(it1)) }
+                    }
+                    getIssuesOwners(0, issues, issues[0].owner)
+                }
+            }
+        })
+    }
+
+    fun postNewIssue(issue: Issue) {
+        val ref = FirebaseDatabase.getInstance().reference.child("issues").push()
+        ref.setValue(issue)
+    }
+
+    private fun isUserExist() {
+        FirebaseAuth.getInstance().currentUser?.let { firebaseUser ->
+            val userId = firebaseUser.uid
+            val ref = FirebaseDatabase.getInstance().reference.child("users").child(userId)
+
+            ref.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(databaseError: DatabaseError?) {
+                    databaseError?.let { onRequestCanceled(it) }
+                }
+
+                override fun onDataChange(dataSnapshot: DataSnapshot?) {
+                    dataSnapshot?.let {
+                        if (it.value == null) {
+                            val userName = firebaseUser.displayName
+                            val email = firebaseUser.email
+                            val profilePictUrl = firebaseUser.photoUrl.toString()
+                            val user = User(userId, userName!!, email!!, profilePictUrl)
+
+                            ref.setValue(user)
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+    private fun getIssueFromDataSnapshot(dataSnapshot: DataSnapshot): Issue {
+        val date = dataSnapshot.child("date")?.value.toString()
+        val title = dataSnapshot.child("title")?.value.toString()
+        val description = dataSnapshot.child("description")?.value.toString()
+        val owner = dataSnapshot.child("owner")?.value.toString()
+        val status = dataSnapshot.child("status")?.value as Boolean
+        val comments = getCommentsFromDataSnapshot(dataSnapshot.child("comments"))
+        return Issue(owner, status, title, description, date, comments, null)
+    }
+
+    private fun getIssuesOwners(issuePos: Int, issues: MutableList<Issue>, ownerId: String) {
+        val ref = FirebaseDatabase.getInstance().reference.child("users").child(ownerId)
+
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onCancelled(databaseError: DatabaseError?) {
+                databaseError?.let { onRequestCanceled(it) }
+            }
+
+            override fun onDataChange(dataSnapshot: DataSnapshot?) {
+                dataSnapshot?.let {
+
+                    issues[issuePos].ownerRef = it.getValue(User::class.java)!!
+                    if (issuePos < issues.size - 1) {
+                        getIssuesOwners(issuePos + 1, issues, issues[issuePos + 1].owner)
+                    } else {
+                        issueList.value = issues
+                    }
+                }
+            }
+        })
+    }
+
+    private fun getCommentsFromDataSnapshot(data: DataSnapshot): MutableList<Comment> {
+        issueList.value?.clear()
+        val comments: MutableList<Comment> = mutableListOf()
+        for (t: DataSnapshot? in data.children) {
+            t?.let {
+                val owner: String = it.child("owner").value.toString()
+                val text: String = it.child("text").value.toString()
+                val date: String = it.child("date").value.toString()
+
+                val ref = FirebaseDatabase.getInstance().reference.child("users").child(owner)
+
+                ref.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(databaseError: DatabaseError?) {
+                        databaseError?.let { onRequestCanceled(it) }
+                    }
+
+                    override fun onDataChange(dataSnapshot: DataSnapshot?) {
+                        dataSnapshot?.let {
+                            val commentOwner = dataSnapshot.getValue(User::class.java)!!
+                            comments.add(Comment(owner, text, date, commentOwner))
+                        }
+                    }
+                })
+            }
+        }
+        return comments
+    }
+
+    private fun onRequestCanceled(databaseError: DatabaseError) {
+        Toast.makeText(getApplication<Application>().applicationContext, "${databaseError.details}", Toast.LENGTH_SHORT).show()
     }
 
     private fun logoutFromAccount() {
@@ -41,62 +158,26 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         client.revokeAccess()
     }
 
-    fun getIssuesData() {
-        val issues: MutableList<Issue> = mutableListOf()
-
-        val ref = FirebaseDatabase.getInstance().reference.child("issues")
-
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onCancelled(databaseError: DatabaseError?) {
-                Toast.makeText(getApplication<Application>().applicationContext, "$databaseError", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onDataChange(dataSnapshot: DataSnapshot?) {
-                dataSnapshot?.let {
-                    for (t: DataSnapshot? in dataSnapshot.children) {
-                        t?.let { it1 -> issues.add(getIssueFromDataSnapshot(it1)) }
-                    }
-                    getIssueOwner(0, issues, issues[0].ownerId)
-                }
-            }
-        })
+    fun startIssueListFragment(supportFragmentManager: FragmentManager) {
+        supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.issues_frame, IssueListFragment(), IssueListFragment.FRAGMENT_TAG)
+                .commit()
     }
 
-    private fun getIssueFromDataSnapshot(dataSnapshot: DataSnapshot): Issue {
-        val date = dataSnapshot.child("date")?.value.toString()
-        val description = dataSnapshot.child("description")?.value.toString()
-        val owner = dataSnapshot.child("owner")?.value.toString()
-        val status = dataSnapshot.child("status")?.value as Boolean
-        val comments = getCommentsFromDataSnapshot(dataSnapshot.child("comments"))
-        return Issue(owner, status, description, date, comments, null)
+    fun startIssueDetailFragment(supportFragmentManager: FragmentManager, issuePos: Int) {
+        supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.issues_frame, IssueDetailFragment.newInstance(issuePos), IssueDetailFragment.FRAGMENT_TAG)
+                .addToBackStack(IssueListFragment.FRAGMENT_TAG)
+                .commit()
     }
 
-    private fun getCommentsFromDataSnapshot(data: DataSnapshot): MutableList<Comment> {
-        val comments: MutableList<Comment> = mutableListOf()
-        for (t: DataSnapshot? in data.children) {
-            comments.add(t?.getValue(Comment::class.java)!!)
-        }
-        return comments
-    }
+    fun startLoginActivity() {
+        logoutFromAccount()
 
-    private fun getIssueOwner(issuePos: Int, issues: MutableList<Issue>, ownerId: String) {
-        val ref = FirebaseDatabase.getInstance().reference.child("users").child(ownerId)
-
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onCancelled(databaseError: DatabaseError?) {
-            }
-
-            override fun onDataChange(dataSnapshot: DataSnapshot?) {
-                dataSnapshot?.let {
-
-                    issues[issuePos].owner = it.getValue(User::class.java)!!
-                    if (issuePos < issues.size - 1) {
-                        getIssueOwner(issuePos + 1, issues, issues[issuePos + 1].ownerId)
-                    } else {
-                        issueList.value = issues
-                    }
-                }
-            }
-        })
+        val intent = Intent(getApplication<Application>().applicationContext, LoginActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        getApplication<Application>().applicationContext.startActivity(intent)
     }
 }
