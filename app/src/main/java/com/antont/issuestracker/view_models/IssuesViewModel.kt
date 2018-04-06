@@ -20,6 +20,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.util.*
 
 class IssuesViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -45,15 +46,35 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
                     for (t: DataSnapshot? in dataSnapshot.children) {
                         t?.let { it1 -> issues.add(getIssueFromDataSnapshot(it1)) }
                     }
-                    getIssuesOwners(0, issues, issues[0].owner)
+                    if (issues.isNotEmpty()) {
+                        getIssuesOwners(0, issues, issues[0].owner)
+                    }
                 }
             }
         })
     }
 
-    fun postNewIssue(issue: Issue) {
-        val ref = FirebaseDatabase.getInstance().reference.child("issues").push()
+    fun postNewIssue(issueTitle: String, issueDescription: String) {
+
+        val key = FirebaseDatabase.getInstance().reference.child("issues").push().key
+        val owner = FirebaseAuth.getInstance().currentUser?.uid
+        val date = Calendar.getInstance().time.toString()
+
+        val issue = Issue(key, owner!!, false, issueTitle, issueDescription, date, null, null)
+
+        val ref = FirebaseDatabase.getInstance().reference.child("issues").child(key)
         ref.setValue(issue)
+    }
+
+    fun postNewComment(issueId: String, commentText: String) {
+        val ref = FirebaseDatabase.getInstance().reference.child("issues").child(issueId).child("comments").push()
+
+        val commentOwner = FirebaseAuth.getInstance().currentUser?.uid
+        val date = Calendar.getInstance().time.toString()
+
+        val comment = Comment(commentOwner!!, commentText, date, null)
+
+        ref.setValue(comment)
     }
 
     private fun isUserExist() {
@@ -83,13 +104,14 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun getIssueFromDataSnapshot(dataSnapshot: DataSnapshot): Issue {
+        val id = dataSnapshot.child("id")?.value.toString()
         val date = dataSnapshot.child("date")?.value.toString()
         val title = dataSnapshot.child("title")?.value.toString()
         val description = dataSnapshot.child("description")?.value.toString()
         val owner = dataSnapshot.child("owner")?.value.toString()
         val status = dataSnapshot.child("status")?.value as Boolean
         val comments = getCommentsFromDataSnapshot(dataSnapshot.child("comments"))
-        return Issue(owner, status, title, description, date, comments, null)
+        return Issue(id, owner, status, title, description, date, comments, null)
     }
 
     private fun getIssuesOwners(issuePos: Int, issues: MutableList<Issue>, ownerId: String) {

@@ -54,8 +54,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         dialog.show(fragmentManager, CREATE_ISSUE_DIALOG_TAG)
     }
 
-    override fun onIssueCreated(newIssue: Issue) {
-        issuesViewModel.postNewIssue(newIssue)
+    override fun onIssueCreated(issueTitle: String, issueDescription: String) {
+        issuesViewModel.postNewIssue(issueTitle, issueDescription)
     }
 
     private fun updateNavigationHeaderItems() {

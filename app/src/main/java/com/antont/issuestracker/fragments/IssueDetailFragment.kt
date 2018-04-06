@@ -37,12 +37,19 @@ class IssueDetailFragment : Fragment() {
         super.onAttach(context)
 
         issuesViewModel = ViewModelProviders.of(context as MainActivity).get(IssuesViewModel::class.java)
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        issuePosition?.let { setupRecyclerView(it) }
+        issuePosition?.let {
+            setupRecyclerView(it)
+            val issueId = issuesViewModel.issueList.value?.get(it)?.id
+            postCommentButton.setOnClickListener {
+                issuesViewModel.postNewComment(issueId!!, comment_text_edit_text.text.toString())
+                comment_text_edit_text.text.clear()
+            }
+        }
+
     }
 
     private fun setupRecyclerView(issueIndex: Int) {

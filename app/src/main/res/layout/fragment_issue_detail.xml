@@ -26,11 +26,11 @@
         android:hint="@string/issue_detail_comment_hint"
         android:inputType="text"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/imageButton"
+        app:layout_constraintEnd_toStartOf="@+id/postCommentButton"
         app:layout_constraintStart_toStartOf="parent" />
 
     <ImageButton
-        android:id="@+id/imageButton"
+        android:id="@+id/postCommentButton"
         android:layout_width="42dp"
         android:layout_height="42dp"
         android:layout_marginBottom="8dp"
