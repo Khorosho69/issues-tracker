@@ -14,7 +14,7 @@
         android:layout_marginTop="8dp"
         app:cardCornerRadius="25dp"
         app:layout_constraintBottom_toTopOf="@+id/view"
-        app:layout_constraintEnd_toStartOf="@+id/issue_item_description"
+        app:layout_constraintEnd_toStartOf="@+id/issue_item_title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -26,7 +26,7 @@
     </android.support.v7.widget.CardView>
 
     <TextView
-        android:id="@+id/issue_item_description"
+        android:id="@+id/issue_item_title"
         android:layout_width="0dp"
         android:layout_height="35dp"
         android:layout_marginBottom="4dp"
@@ -50,7 +50,7 @@
         android:textSize="12sp"
         app:layout_constraintBottom_toTopOf="@+id/view"
         app:layout_constraintStart_toEndOf="@+id/cardView"
-        app:layout_constraintTop_toBottomOf="@+id/issue_item_description"
+        app:layout_constraintTop_toBottomOf="@+id/issue_item_title"
         tools:text="From: donald trump" />
 
     <ImageView
@@ -63,7 +63,7 @@
         android:src="@drawable/ic_message_black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/issue_item_message_count_view"
-        app:layout_constraintTop_toBottomOf="@+id/issue_item_description" />
+        app:layout_constraintTop_toBottomOf="@+id/issue_item_title" />
 
     <TextView
         android:id="@+id/issue_item_message_count_view"

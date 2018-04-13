@@ -19,14 +19,16 @@ class IssuesViewAdapter(private val issues: MutableList<Issue>, private val list
     }
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
-        holder.itemView.setOnClickListener { listener.onItemSelected(position) }
+        holder.itemView.setOnClickListener {
+            listener.onItemSelected(issues[position].id)
+        }
 
         Picasso.get()
                 .load(issues[position].ownerRef?.profilePictUrl)
                 .placeholder(R.drawable.profile_image_placeholder)
                 .into(holder.imageView)
 
-        holder.issueDescription.text = issues[position].description
+        holder.issueTitle.text = issues[position].title
         holder.issueOwner.text = "From: ${issues[position].ownerRef?.name}"
         issues[position].comments?.let {
             holder.commentsCount.text = it.size.toString()
@@ -42,12 +44,12 @@ class IssuesViewAdapter(private val issues: MutableList<Issue>, private val list
     class UserViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         val imageView: ImageView = view.findViewById(issue_item_image)
-        val issueDescription: TextView = view.findViewById(issue_item_description)
+        val issueTitle: TextView = view.findViewById(issue_item_title)
         val commentsCount: TextView = view.findViewById(issue_item_message_count_view)
         val issueOwner: TextView = view.findViewById(issue_item_owner_name)
     }
 
     interface OnItemSelectedCallback {
-        fun onItemSelected(issuePosition: Int)
+        fun onItemSelected(issueId: String)
     }
 }

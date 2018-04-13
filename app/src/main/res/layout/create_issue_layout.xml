@@ -5,7 +5,7 @@
     android:orientation="vertical">
 
     <EditText
-        android:id="@+id/create_issue_title"
+        android:id="@+id/createIssueTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
@@ -13,7 +13,7 @@
         android:inputType="text" />
 
     <EditText
-        android:id="@+id/create_issue_description"
+        android:id="@+id/createIssueDescription"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"

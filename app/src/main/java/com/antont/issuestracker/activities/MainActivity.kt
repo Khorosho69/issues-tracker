@@ -2,19 +2,16 @@ package com.antont.issuestracker.activities
 
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import com.antont.issuestracker.R
 import com.antont.issuestracker.fragments.CreateIssueDialog
 import com.antont.issuestracker.fragments.IssueListFragment
-import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.view_models.IssuesViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
@@ -38,14 +35,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         fab.setOnClickListener { _ -> showCreateNewIssueDialog() }
 
         val toggle = ActionBarDrawerToggle(
-                this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawer_layout.addDrawerListener(toggle)
+                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
         navigationView.setNavigationItemSelectedListener(this)
 
         if (savedInstanceState == null) {
-            issuesViewModel.startIssueListFragment(supportFragmentManager)
+            issuesViewModel.startIssueListFragment(supportFragmentManager, IssueListFragment.ListType.ALL_ISSUES)
         }
     }
 
@@ -55,7 +52,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onIssueCreated(issueTitle: String, issueDescription: String) {
-        issuesViewModel.postNewIssue(issueTitle, issueDescription)
+        issuesViewModel.postIssue(issueTitle, issueDescription)
     }
 
     private fun updateNavigationHeaderItems() {
@@ -69,8 +66,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     .placeholder(R.drawable.ic_launcher_background)
                     .into(navigationHeaderView.navigationHeaderProfilePicture)
 
-            navigationHeaderView.navigation_header_user_name.text = user.displayName
-            navigationHeaderView.navigation_header_email.text = user.email
+            navigationHeaderView.navigationHeaderUserName.text = user.displayName
+            navigationHeaderView.navigationHeaderEmail.text = user.email
         }
     }
 
@@ -79,8 +76,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onBackPressed() {
-        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
-            drawer_layout.closeDrawer(GravityCompat.START)
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
         } else {
             super.onBackPressed()
         }
@@ -103,15 +100,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.nav_add_issue -> {
                 showCreateNewIssueDialog()
             }
-            R.id.nav_user_issues -> {
-                issuesViewModel.startIssueListFragment(supportFragmentManager)
+            R.id.nav_all_issues -> {
+                issuesViewModel.startIssueListFragment(supportFragmentManager, IssueListFragment.ListType.ALL_ISSUES)
+            }
+            R.id.nav_my_issues -> {
+                issuesViewModel.startIssueListFragment(supportFragmentManager, IssueListFragment.ListType.MY_ISSUES)
             }
             R.id.nav_logout -> {
                 issuesViewModel.startLoginActivity()
             }
         }
 
-        drawer_layout.closeDrawer(GravityCompat.START)
+        drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
 

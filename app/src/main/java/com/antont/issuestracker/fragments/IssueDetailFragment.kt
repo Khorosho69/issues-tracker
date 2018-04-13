@@ -1,11 +1,11 @@
 package com.antont.issuestracker.fragments
 
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
-import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,18 +14,19 @@ import android.widget.LinearLayout
 import com.antont.issuestracker.R
 import com.antont.issuestracker.activities.MainActivity
 import com.antont.issuestracker.adapters.CommentsViewAdapter
-import com.antont.issuestracker.view_models.IssuesViewModel
+import com.antont.issuestracker.models.Issue
+import com.antont.issuestracker.view_models.IssueDetailViewModel
 import kotlinx.android.synthetic.main.fragment_issue_detail.*
 
 class IssueDetailFragment : Fragment() {
 
-    private lateinit var issuesViewModel: IssuesViewModel
-    private var issuePosition: Int? = null
+    private lateinit var issueDetailViewModel: IssueDetailViewModel
+    private lateinit var issuePosition: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            issuePosition = it.getInt(ARG_ISSUE_POSITION)
+            issuePosition = it.getString(ARG_ISSUE_ID)
         }
     }
 
@@ -35,40 +36,43 @@ class IssueDetailFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-
-        issuesViewModel = ViewModelProviders.of(context as MainActivity).get(IssuesViewModel::class.java)
+        issueDetailViewModel = ViewModelProviders.of(context as MainActivity).get(IssueDetailViewModel::class.java)
+        issueDetailViewModel.issueLiveData?.observe(this, Observer { it?.let { it1 -> setupRecyclerView(it1) } })
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        issuePosition?.let {
-            setupRecyclerView(it)
-            val issueId = issuesViewModel.issueList.value?.get(it)?.id
+        issuePosition.let {
+            issueDetailViewModel.addValueEventListener(it)
             postCommentButton.setOnClickListener {
-                issuesViewModel.postNewComment(issueId!!, comment_text_edit_text.text.toString())
-                comment_text_edit_text.text.clear()
+                issueDetailViewModel.postComment(commentTextEditText.text.toString())
+                commentsRecyclerView.scrollToPosition(commentsRecyclerView.adapter.itemCount - 1)
+                commentTextEditText.text.clear()
             }
         }
-
     }
 
-    private fun setupRecyclerView(issueIndex: Int) {
-        comments_recycler_view.layoutManager = LinearLayoutManager(context, LinearLayout.VERTICAL, false)
-        issuesViewModel.issueList.value?.let {
-            val adapter = CommentsViewAdapter(it[issueIndex])
-            comments_recycler_view.adapter = adapter
-        }
+    private fun setupRecyclerView(issue: Issue) {
+        val layoutManager = LinearLayoutManager(context, LinearLayout.VERTICAL, false)
+        commentsRecyclerView.layoutManager = layoutManager
+        val adapter = CommentsViewAdapter(issue)
+        commentsRecyclerView.adapter = adapter
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        issueDetailViewModel.removeValueListener()
     }
 
     companion object {
         const val FRAGMENT_TAG: String = "issue_detail_fragment"
-        const val ARG_ISSUE_POSITION: String = "issue_detail_fragment"
+        const val ARG_ISSUE_ID: String = "ARG_ISSUE_ID"
 
         @JvmStatic
-        fun newInstance(issuePosition: Int) =
+        fun newInstance(issueId: String) =
                 IssueDetailFragment().apply {
                     arguments = Bundle().apply {
-                        putInt(ARG_ISSUE_POSITION, issuePosition)
+                        putString(ARG_ISSUE_ID, issueId)
                     }
                 }
     }

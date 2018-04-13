@@ -7,7 +7,7 @@
     tools:context=".fragments.IssueListFragment">
 
     <ProgressBar
-        android:id="@+id/issues_progress_bar"
+        android:id="@+id/issuesLoadingProgressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -16,12 +16,12 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/issues_refresh_layout"
+        android:id="@+id/issuesRefreshLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.RecyclerView
-            android:id="@+id/users_recycler_view"
+            android:id="@+id/issuesRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 

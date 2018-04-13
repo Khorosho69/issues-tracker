@@ -19,7 +19,7 @@ class LoginActivity : AppCompatActivity() {
         mLoginViewModel = ViewModelProviders.of(this).get(LoginViewModel::class.java)
 
         if (!mLoginViewModel.isUserAuthorized()) {
-            google_login_button.setOnClickListener {
+            googleLoginButton.setOnClickListener {
                 startActivityForResult(mLoginViewModel.getGoogleSingInIntent(), LoginViewModel.GOOGLE_SIGN_IN_CODE)
             }
         }

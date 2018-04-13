@@ -49,7 +49,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         } ?: return false
     }
 
-
     fun getGoogleSingInIntent(): Intent {
         val requestIdToken = getApplication<Application>().resources.getString(R.string.default_web_client_id)
 
@@ -67,7 +66,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun starIssuesActivity() {
         val intent = Intent(getApplication<Application>().applicationContext, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         getApplication<Application>().startActivity(intent)
     }
 

@@ -6,10 +6,11 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 
 import com.antont.issuestracker.R
 import com.antont.issuestracker.activities.MainActivity
@@ -20,6 +21,7 @@ import kotlinx.android.synthetic.main.fragment_issues.*
 
 class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
     private lateinit var issuesViewModel: IssuesViewModel
+    var listType: ListType = ListType.ALL_ISSUES
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_issues, container, false)
@@ -34,31 +36,35 @@ class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
         super.onViewCreated(view, savedInstanceState)
 
         showActionButton(true)
-
-        issues_refresh_layout.setOnRefreshListener { issuesViewModel.getIssuesData() }
-
-        issuesViewModel.issueList.value?.let {
-            setupRecyclerView(it)
-        } ?: kotlin.run {
-            issuesViewModel.issueList.observe(this, Observer { t -> t?.let { setupRecyclerView(it) } })
-            issuesViewModel.initialize()
-        }
+        issuesRefreshLayout.setOnRefreshListener { getIssues(listType) }
+        issuesViewModel.issuesLivaData.observe(this, Observer { mutableList ->
+            mutableList?.let { setupRecyclerView(it) }
+        })
+        getIssues(listType)
     }
 
-    override fun onItemSelected(issuePosition: Int) {
+    override fun onItemSelected(issueId: String) {
         activity?.let {
-            issuesViewModel.startIssueDetailFragment(it.supportFragmentManager, issuePosition)
+            issuesViewModel.removeValueListener()
+            issuesViewModel.startIssueDetailFragment(it.supportFragmentManager, issueId)
         }
-
         showActionButton(false)
     }
 
+    fun getIssues(listType: ListType) {
+        this.listType = listType
+        issuesViewModel.getIssuesList(listType)
+    }
+
     private fun setupRecyclerView(issues: MutableList<Issue>) {
-        issues_refresh_layout.isRefreshing = false
+        issuesRefreshLayout.isRefreshing = false
         showProgress(false)
-        users_recycler_view.layoutManager = LinearLayoutManager(context)
+
+        val layoutManager = LinearLayoutManager(context)
+
+        issuesRecyclerView.layoutManager = layoutManager
         val adapter = IssuesViewAdapter(issues, this)
-        users_recycler_view.adapter = adapter
+        issuesRecyclerView.adapter = adapter
     }
 
     private fun showActionButton(visible: Boolean) {
@@ -67,9 +73,11 @@ class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
     }
 
     private fun showProgress(isLoading: Boolean) {
-        users_recycler_view.visibility = if (isLoading) View.GONE else View.VISIBLE
-        issues_progress_bar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        issuesRecyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
+        issuesLoadingProgressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
+
+    enum class ListType constructor(val value: Int) { ALL_ISSUES(0), MY_ISSUES(1) }
 
     companion object {
         const val FRAGMENT_TAG: String = "issues_fragment"

@@ -23,15 +23,15 @@ class CommentsViewAdapter(private val issue: Issue) : RecyclerView.Adapter<Recyc
                 return CommentsViewAdapter.CommentsViewHolder(v)
             }
         }
-        throw RuntimeException("there is no type that matches the type $viewType")
+        throw RuntimeException("There is no type that matches the type $viewType}")
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is HeaderViewHolder -> {
-                holder.issueTitle.text = issue.description
+                holder.issueTitle.text = issue.title
                 holder.issueDescription.text = issue.description
-                holder.issueCreatedDate.text = "Issue created: ${issue.date}"
+                holder.issueCreatedDate.text = "Created: ${issue.date}"
                 issue.ownerRef?.let {
                     Picasso.get()
                             .load(it.profilePictUrl)
@@ -45,7 +45,7 @@ class CommentsViewAdapter(private val issue: Issue) : RecyclerView.Adapter<Recyc
             is CommentsViewHolder -> {
                 issue.comments?.let {
                     Picasso.get()
-                            .load(issue.comments[position - 1].ownerRef?.profilePictUrl)
+                            .load(it[position - 1].ownerRef?.profilePictUrl)
                             .placeholder(R.drawable.profile_image_placeholder)
                             .into(holder.imageView)
                     holder.commentOwnerName.text = it[position - 1].ownerRef?.name

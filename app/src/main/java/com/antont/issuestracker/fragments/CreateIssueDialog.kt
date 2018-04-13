@@ -8,8 +8,8 @@ import android.support.v7.app.AlertDialog
 import android.view.View
 import android.widget.EditText
 import com.antont.issuestracker.R
-import com.antont.issuestracker.R.id.create_issue_description
-import com.antont.issuestracker.R.id.create_issue_title
+import com.antont.issuestracker.R.id.createIssueDescription
+import com.antont.issuestracker.R.id.createIssueTitle
 
 class CreateIssueDialog : DialogFragment() {
     private lateinit var listener: OnIssueCreatedCallback
@@ -32,7 +32,7 @@ class CreateIssueDialog : DialogFragment() {
         builder.setView(dialogView)
                 .setTitle("Create new issue")
                 .setPositiveButton("Done", { _, _ ->
-                    listener.onIssueCreated(getIssueTitle(dialogView, create_issue_title), getIssueTitle(dialogView, create_issue_description))
+                    listener.onIssueCreated(getIssueTitle(dialogView, createIssueTitle), getIssueTitle(dialogView, createIssueDescription))
                 })
 
         return builder.create()

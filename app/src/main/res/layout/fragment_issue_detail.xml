@@ -7,17 +7,17 @@
     tools:context=".fragments.IssueDetailFragment">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/comments_recycler_view"
+        android:id="@+id/commentsRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/comment_text_edit_text"
+        app:layout_constraintBottom_toTopOf="@+id/commentTextEditText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/comment_text_edit_text"
+        android:id="@+id/commentTextEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -38,6 +38,6 @@
         android:background="@drawable/ic_add_comment"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/comment_text_edit_text" />
+        app:layout_constraintStart_toEndOf="@+id/commentTextEditText" />
 
 </android.support.constraint.ConstraintLayout>

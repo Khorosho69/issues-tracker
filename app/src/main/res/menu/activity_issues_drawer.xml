@@ -9,7 +9,11 @@
             android:icon="@drawable/ic_add_issue_black"
             android:title="@string/nav_menu_add_new_issue_text" />
         <item
-            android:id="@+id/nav_user_issues"
+            android:id="@+id/nav_all_issues"
+            android:icon="@drawable/ic_issues_list_black"
+            android:title="@string/nav_menu_all_issues"/>
+        <item
+            android:id="@+id/nav_my_issues"
             android:icon="@drawable/ic_issues_list_black"
             android:title="@string/nav_menu_user_issues_list_title"/>
     </group>
