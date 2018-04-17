@@ -20,4 +20,6 @@
     <string name="create_issue_description_hint">Issue description</string>
     <string name="comment_profile_image_description">Profile image of the owner of the comment</string>
     <string name="nav_menu_all_issues">All issues</string>
+    <string name="new_isssue_dialog_error_message">Please enter the name and description of the issue</string>
+    <string name="no_issues_message">No issues</string>
 </resources>

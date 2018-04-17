@@ -30,6 +30,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         issuesViewModel = ViewModelProviders.of(this).get(IssuesViewModel::class.java)
 
+        issuesViewModel.isUserExist()
+
         updateNavigationHeaderItems()
 
         fab.setOnClickListener { _ -> showCreateNewIssueDialog() }
@@ -51,7 +53,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         dialog.show(fragmentManager, CREATE_ISSUE_DIALOG_TAG)
     }
 
-    override fun onIssueCreated(issueTitle: String, issueDescription: String) {
+    override fun postIssue(issueTitle: String, issueDescription: String) {
         issuesViewModel.postIssue(issueTitle, issueDescription)
     }
 

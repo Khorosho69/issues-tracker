@@ -45,9 +45,12 @@ class IssueDetailFragment : Fragment() {
         issuePosition.let {
             issueDetailViewModel.addValueEventListener(it)
             postCommentButton.setOnClickListener {
-                issueDetailViewModel.postComment(commentTextEditText.text.toString())
-                commentsRecyclerView.scrollToPosition(commentsRecyclerView.adapter.itemCount - 1)
-                commentTextEditText.text.clear()
+                val commentText = commentTextEditText.text.toString()
+                if (commentText.isNotEmpty()) {
+                    issueDetailViewModel.postComment(commentTextEditText.text.toString())
+                    commentsRecyclerView.scrollToPosition(commentsRecyclerView.adapter.itemCount - 1)
+                    commentTextEditText.text.clear()
+                }
             }
         }
     }

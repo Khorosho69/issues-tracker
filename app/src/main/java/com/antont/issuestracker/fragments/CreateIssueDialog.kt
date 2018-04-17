@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.view.View
 import android.widget.EditText
+import android.widget.Toast
 import com.antont.issuestracker.R
 import com.antont.issuestracker.R.id.createIssueDescription
 import com.antont.issuestracker.R.id.createIssueTitle
@@ -29,21 +30,29 @@ class CreateIssueDialog : DialogFragment() {
 
         val dialogView = inflater.inflate(R.layout.create_issue_layout, null)
 
+
         builder.setView(dialogView)
                 .setTitle("Create new issue")
-                .setPositiveButton("Done", { _, _ ->
-                    listener.onIssueCreated(getIssueTitle(dialogView, createIssueTitle), getIssueTitle(dialogView, createIssueDescription))
-                })
+                .setPositiveButton(dialogView.context.getText(android.R.string.ok), { _, _ -> onPostIssueButtonClick(dialogView) })
 
         return builder.create()
     }
 
-    private fun getIssueTitle(view: View, textId: Int): String {
-        val titleEditText: EditText = view.findViewById(textId)
-        return titleEditText.text.toString()
+    private fun onPostIssueButtonClick(view: View) {
+        val issueTitleEditText: EditText = view.findViewById(createIssueTitle)
+        val issueDescriptionEditText: EditText = view.findViewById(createIssueDescription)
+
+        val issueTitle = issueTitleEditText.text.toString()
+        val issueDescription = issueDescriptionEditText.text.toString()
+
+        if (issueTitle.isNotEmpty() and issueDescription.isNotEmpty()) {
+            listener.postIssue(issueTitle, issueDescription)
+        } else {
+            Toast.makeText(view.context, getString(R.string.new_isssue_dialog_error_message), Toast.LENGTH_SHORT).show()
+        }
     }
 
     interface OnIssueCreatedCallback {
-        fun onIssueCreated(issueTitle: String, issueDescription: String)
+        fun postIssue(issueTitle: String, issueDescription: String)
     }
 }

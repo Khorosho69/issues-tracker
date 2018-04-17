@@ -18,6 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.iid.FirebaseInstanceId
 import java.util.*
 
 class IssuesViewModel(application: Application) : AndroidViewModel(application) {
@@ -40,14 +41,16 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 if (issues.isNotEmpty()) {
                     getIssuesOwners(0, issues)
+                } else {
+                    issuesLivaData.value = issues
+                    val context = getApplication<Application>().applicationContext
+                    Toast.makeText(context, context.getString(R.string.no_issues_message), Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
-    fun getIssuesList(listType: IssueListFragment.ListType) {
-        isUserExist()
-
+    fun getIssueListRequest(listType: IssueListFragment.ListType) {
         databaseReference = FirebaseDatabase.getInstance().reference.child("issues")
 
         if (listType == IssueListFragment.ListType.MY_ISSUES) {
@@ -114,7 +117,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         return Issue(id, owner, title, description, date, status, comments, null)
     }
 
-    private fun isUserExist() {
+    fun isUserExist() {
         FirebaseAuth.getInstance().currentUser?.let { firebaseUser ->
             val userId = firebaseUser.uid
             val ref = FirebaseDatabase.getInstance().reference.child("users").child(userId)
@@ -130,9 +133,12 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
                             val userName = firebaseUser.displayName
                             val email = firebaseUser.email
                             val profilePictUrl = firebaseUser.photoUrl.toString()
-                            val user = User(userId, userName!!, email!!, profilePictUrl)
+                            val token = FirebaseInstanceId.getInstance().token
 
-                            ref.setValue(user)
+                            token?.let {
+                                val user = User(userId, userName!!, email!!, profilePictUrl, token)
+                                ref.setValue(user)
+                            }
                         }
                     }
                 }

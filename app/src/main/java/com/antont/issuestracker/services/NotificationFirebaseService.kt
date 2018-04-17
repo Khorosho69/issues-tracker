@@ -18,32 +18,11 @@ class NotificationFirebaseService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage?) {
         super.onMessageReceived(remoteMessage)
         remoteMessage?.let { message ->
-
-            if (message.data.isNotEmpty()) {
-                Log.d(TAG, "Message data payload: " + message.data)
-
-                if (/* Check if data needs to be processed by long running job */ true) {
-                    // For long-running tasks (10 seconds or more) use Firebase Job Dispatcher.
-                    scheduleJob()
-                } else {
-                    // Handle message within 10 seconds
-                    handleNow()
-                }
-
-            }
             message.notification?.let {
-                Log.d(TAG, "Message Notification Body: " + it.body)
-//                it.body?.let { it1 -> sendNotification(it1) }
+                Log.d(this.javaClass.simpleName, "Message Notification Body: " + it.body)
+                it.body?.let { it1 -> sendNotification(it1) }
             }
         }
-    }
-
-    private fun scheduleJob() {
-
-    }
-
-    private fun handleNow() {
-
     }
 
     private fun sendNotification(message: String) {
@@ -54,6 +33,8 @@ class NotificationFirebaseService : FirebaseMessagingService() {
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Title")
                 .setContentText(message)
+
+        notificationBuilder.setContentIntent(pendingIntent)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -66,7 +47,6 @@ class NotificationFirebaseService : FirebaseMessagingService() {
     }
 
     companion object {
-        const val TAG = "NotificationService"
         private const val CHANEL_ID = "FirebaseNotification"
     }
 }
