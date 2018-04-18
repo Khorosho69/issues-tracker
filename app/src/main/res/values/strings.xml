@@ -11,9 +11,6 @@
     <string name="nav_menu_settings_title">Settings</string>
     <string name="nav_menu_add_new_issue_text">Add new issue</string>
     <string name="nav_menu_user_issues_list_title">My issues</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="issue_detail_comment_hint">Add a comment…</string>
     <string name="issue_header_comments_title">Comments:</string>
     <string name="create_issue_title_hint">Issue title</string>
@@ -22,4 +19,7 @@
     <string name="nav_menu_all_issues">All issues</string>
     <string name="new_isssue_dialog_error_message">Please enter the name and description of the issue</string>
     <string name="no_issues_message">No issues</string>
+    <string name="signin_auth_error_message">Authorization canceled, please try again.</string>
+    <string name="post_issue_dialog_title">Post new issue</string>
+    <string name="no_internet_message">No internet connection</string>
 </resources>

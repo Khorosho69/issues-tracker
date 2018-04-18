@@ -3,7 +3,9 @@ package com.antont.issuestracker.view_models
 import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.support.v4.app.FragmentManager
 import android.util.Log
 import android.widget.Toast
@@ -20,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.iid.FirebaseInstanceId
 import java.util.*
+import kotlin.coroutines.experimental.coroutineContext
 
 class IssuesViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -51,14 +54,33 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun getIssueListRequest(listType: IssueListFragment.ListType) {
-        databaseReference = FirebaseDatabase.getInstance().reference.child("issues")
+        if (isDeviceOnline()) {
+            databaseReference = FirebaseDatabase.getInstance().reference.child("issues")
 
-        if (listType == IssueListFragment.ListType.MY_ISSUES) {
-            val query = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
-            query.addValueEventListener(valueEventListener)
+            if (listType == IssueListFragment.ListType.MY_ISSUES) {
+                val query = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
+                query.addValueEventListener(valueEventListener)
+            } else {
+                databaseReference.addValueEventListener(valueEventListener)
+            }
         } else {
-            databaseReference.addValueEventListener(valueEventListener)
+            issuesLivaData.value = mutableListOf()
+            showNoInternetToast()
         }
+    }
+
+    private fun showNoInternetToast() {
+        val context = getApplication<Application>().applicationContext
+        Toast.makeText(context, context.getString(R.string.no_internet_message), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun isDeviceOnline(): Boolean {
+        val context = getApplication<Application>().applicationContext
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = connectivityManager.activeNetworkInfo
+        networkInfo?.let {
+            return networkInfo.isConnectedOrConnecting
+        } ?: return false
     }
 
     fun removeValueListener() {
@@ -66,15 +88,19 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun postIssue(issueTitle: String, issueDescription: String) {
-        val newIssueId = FirebaseDatabase.getInstance().reference.child("issues").push().key
+        if (isDeviceOnline()) {
+            val newIssueId = FirebaseDatabase.getInstance().reference.child("issues").push().key
 
-        FirebaseAuth.getInstance().currentUser?.let {
-            val ownerId = it.uid
-            val date = Calendar.getInstance().time.toString()
-            val issue = Issue(newIssueId, ownerId, issueTitle, issueDescription, date, false, null, null)
+            FirebaseAuth.getInstance().currentUser?.let {
+                val ownerId = it.uid
+                val date = Calendar.getInstance().time.toString()
+                val issue = Issue(newIssueId, ownerId, issueTitle, issueDescription, date, false, null, null)
 
-            val ref = FirebaseDatabase.getInstance().reference.child("issues").child(newIssueId)
-            ref.setValue(issue)
+                val ref = FirebaseDatabase.getInstance().reference.child("issues").child(newIssueId)
+                ref.setValue(issue)
+            }
+        } else {
+            showNoInternetToast()
         }
     }
 
@@ -193,4 +219,6 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
 
         getApplication<Application>().applicationContext.startActivity(intent)
     }
+
+
 }

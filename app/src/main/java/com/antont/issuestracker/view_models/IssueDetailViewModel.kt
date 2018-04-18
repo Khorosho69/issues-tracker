@@ -4,6 +4,7 @@ import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
 import android.util.Log
+import android.widget.Toast
 import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.models.User
@@ -13,13 +14,38 @@ import java.util.*
 
 class IssueDetailViewModel(application: Application) : AndroidViewModel(application) {
 
-    val issueLiveData: MutableLiveData<Issue>? = MutableLiveData()
+    var issueLiveData: MutableLiveData<Issue> = MutableLiveData()
+    val commentsLiveData: MutableLiveData<Comment> = MutableLiveData()
 
-    private lateinit var databaseReference: DatabaseReference
-    private lateinit var valueEventListener: ValueEventListener
+    private val valueEventListener: ValueEventListener = object : ValueEventListener {
+        override fun onCancelled(databaseError: DatabaseError?) {
+            databaseError?.let { Log.d(IssueDetailViewModel::javaClass.name, "Request cancelled: ${databaseError.message}") }
+        }
+
+        override fun onDataChange(dataSnapshot: DataSnapshot?) {
+            dataSnapshot?.let { getIssueFromDataSnapshot(it) }
+        }
+    }
+
+    private val childEventListener: ChildEventListener = object : ChildEventListener {
+        override fun onCancelled(databaseError: DatabaseError?) {
+            databaseError?.let { onRequestCanceled(it) }
+        }
+
+        override fun onChildMoved(p0: DataSnapshot?, p1: String?) {}
+
+        override fun onChildChanged(p0: DataSnapshot?, p1: String?) {}
+
+        override fun onChildAdded(dataSnapshot: DataSnapshot?, p1: String?) {
+            val newComment = dataSnapshot?.getValue(Comment::class.java)!!
+            getCommentOwner(newComment)
+        }
+
+        override fun onChildRemoved(p0: DataSnapshot?) {}
+    }
 
     fun postComment(commentText: String) {
-        issueLiveData?.value?.let {
+        issueLiveData.value?.let {
             val ref = FirebaseDatabase.getInstance().reference.child("issues").child(it.id).child("comments").push()
             FirebaseAuth.getInstance().currentUser?.let {
                 val commentOwner = it.uid
@@ -31,19 +57,9 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun addValueEventListener(issueId: String) {
-        valueEventListener = object : ValueEventListener {
-            override fun onCancelled(databaseError: DatabaseError?) {
-                databaseError?.let { Log.d(IssueDetailViewModel::javaClass.name, "Request cancelled: ${databaseError.message}") }
-            }
-
-            override fun onDataChange(dataSnapshot: DataSnapshot?) {
-                dataSnapshot?.let { getIssueFromDataSnapshot(it) }
-            }
-        }
-
-        databaseReference = FirebaseDatabase.getInstance().reference.child("issues").child(issueId)
-        databaseReference.addValueEventListener(valueEventListener)
+    fun getIssuesDetailRequest(issueId: String) {
+        val databaseRef = FirebaseDatabase.getInstance().reference.child("issues").child(issueId)
+        databaseRef.addListenerForSingleValueEvent(valueEventListener)
     }
 
     fun getIssueFromDataSnapshot(issuesDataSnapshot: DataSnapshot) {
@@ -55,17 +71,9 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
         val status = issuesDataSnapshot.child("status")?.value as Boolean
 
         val comments = mutableListOf<Comment>()
-        val commentsDataSnapshot = issuesDataSnapshot.child("comments")
         val issue = Issue(issueId, issueOwner, title, description, date, status, comments, null)
 
-        if (commentsDataSnapshot.childrenCount > 0) {
-            for (t: DataSnapshot? in commentsDataSnapshot.children) {
-                comments.add(t?.getValue(Comment::class.java)!!)
-            }
-            getCommentsOwners(0, issue, comments[0].owner)
-        } else {
-            getIssueOwner(issue)
-        }
+        getIssueOwner(issue)
     }
 
     private fun getIssueOwner(issueRef: Issue) {
@@ -79,14 +87,21 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
             override fun onDataChange(dataSnapshot: DataSnapshot?) {
                 dataSnapshot?.let { issueData ->
                     issueRef.ownerRef = issueData.getValue(User::class.java)!!
-                    issueLiveData?.value = issueRef
+                    issueLiveData.value = issueRef
+
+                    val commentsRef = FirebaseDatabase.getInstance().reference.child("issues").child(issueRef.id).child("comments")
+                    commentsRef.addChildEventListener(childEventListener)
                 }
             }
         })
     }
 
-    private fun getCommentsOwners(commentPos: Int, issue: Issue, ownerId: String) {
-        val ref = FirebaseDatabase.getInstance().reference.child("users").child(ownerId)
+    fun addIssueLiveDataCommentsList(comment: Comment) {
+        issueLiveData.value?.comments?.add(comment)
+    }
+
+    private fun getCommentOwner(comment: Comment) {
+        val ref = FirebaseDatabase.getInstance().reference.child("users").child(comment.owner)
 
         ref.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
@@ -95,21 +110,14 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
 
             override fun onDataChange(dataSnapshot: DataSnapshot?) {
                 dataSnapshot?.let { issueData ->
-                    issue.comments?.let {
-                        issue.comments[commentPos].ownerRef = issueData.getValue(User::class.java)!!
-                        if (commentPos < issue.comments.size - 1) {
-                            getCommentsOwners(commentPos + 1, issue, issue.comments[commentPos + 1].owner)
-                        } else {
-                            getIssueOwner(issue)
-                            issueLiveData?.value = issue
-                        }
-                    }
+                    comment.ownerRef = issueData.getValue(User::class.java)!!
+                    commentsLiveData.value = comment
                 }
             }
         })
     }
 
-    fun removeValueListener() {
-        databaseReference.removeEventListener(valueEventListener)
+    private fun onRequestCanceled(databaseError: DatabaseError) {
+        Toast.makeText(getApplication<Application>().applicationContext, "${databaseError.details}", Toast.LENGTH_SHORT).show()
     }
 }

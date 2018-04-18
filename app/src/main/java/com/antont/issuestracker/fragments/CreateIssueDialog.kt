@@ -32,7 +32,7 @@ class CreateIssueDialog : DialogFragment() {
 
 
         builder.setView(dialogView)
-                .setTitle("Create new issue")
+                .setTitle(getString(R.string.post_issue_dialog_title))
                 .setPositiveButton(dialogView.context.getText(android.R.string.ok), { _, _ -> onPostIssueButtonClick(dialogView) })
 
         return builder.create()

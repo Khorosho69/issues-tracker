@@ -4,6 +4,7 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
@@ -19,7 +20,7 @@ import kotlinx.android.synthetic.main.fragment_issues.*
 
 class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
     private lateinit var issuesViewModel: IssuesViewModel
-    var listType: ListType = ListType.ALL_ISSUES
+    private var listType: ListType = ListType.ALL_ISSUES
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_issues, container, false)
@@ -34,11 +35,17 @@ class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
         super.onViewCreated(view, savedInstanceState)
 
         showActionButton(true)
-        issuesRefreshLayout.setOnRefreshListener { getIssues(listType) }
+
+        issuesRefreshLayout.setOnRefreshListener { issuesViewModel.getIssueListRequest(listType) }
         issuesViewModel.issuesLivaData.observe(this, Observer { mutableList ->
             mutableList?.let { setupRecyclerView(it) }
         })
-        getIssues(listType)
+
+        issuesViewModel.issuesLivaData.value?.let {
+            setupRecyclerView(it)
+        } ?: kotlin.run {
+            getIssues(listType)
+        }
     }
 
     override fun onItemSelected(issueId: String) {
@@ -51,11 +58,13 @@ class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
 
     fun getIssues(listType: ListType) {
         this.listType = listType
+        showProgress(true)
         issuesViewModel.getIssueListRequest(listType)
     }
 
     private fun setupRecyclerView(issues: MutableList<Issue>) {
         issuesRefreshLayout.isRefreshing = false
+
         showProgress(false)
 
         val layoutManager = LinearLayoutManager(context)

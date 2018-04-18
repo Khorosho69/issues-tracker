@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.antont.issuestracker.R
+import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.squareup.picasso.Picasso
 
@@ -41,7 +42,6 @@ class CommentsViewAdapter(private val issue: Issue) : RecyclerView.Adapter<Recyc
                     holder.issueOwnerEmail.text = it.email
                 }
             }
-
             is CommentsViewHolder -> {
                 issue.comments?.let {
                     Picasso.get()
@@ -54,6 +54,10 @@ class CommentsViewAdapter(private val issue: Issue) : RecyclerView.Adapter<Recyc
             }
         }
     }
+
+//    fun notifyNewCommentAdded(comment: Comment){
+//
+//    }
 
     override fun getItemCount(): Int {
         issue.comments?.let {
