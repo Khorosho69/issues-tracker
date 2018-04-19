@@ -13,6 +13,7 @@ import android.widget.LinearLayout
 
 import com.antont.issuestracker.R
 import com.antont.issuestracker.adapters.CommentsViewAdapter
+import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.view_models.IssueDetailViewModel
 import kotlinx.android.synthetic.main.fragment_issue_detail.*
@@ -37,10 +38,9 @@ class IssueDetailFragment : Fragment() {
         super.onAttach(context)
 
         issueDetailViewModel = ViewModelProviders.of(this).get(IssueDetailViewModel::class.java)
-        issueDetailViewModel.issueLiveData.observe(this, Observer { it?.let { it1 -> setupRecyclerView(it1) } })
-        issueDetailViewModel.commentsLiveData.observe(this, Observer {
-            it?.let { it1 ->
-                issueDetailViewModel.addIssueLiveDataCommentsList(it1)
+        issueDetailViewModel.issueLiveData.observe(this, Observer { it?.let { it1 -> setupRecyclerView(it1, issueDetailViewModel.comments) } })
+        issueDetailViewModel.commentLiveData.observe(this, Observer {
+            it?.let {
                 notifyNewCommentAdded()
             }
         })
@@ -65,17 +65,17 @@ class IssueDetailFragment : Fragment() {
         }
     }
 
-    private fun setupRecyclerView(issue: Issue) {
+    private fun setupRecyclerView(issue: Issue, comments: MutableList<Comment>) {
         showProgress(false)
         val layoutManager = LinearLayoutManager(context, LinearLayout.VERTICAL, false)
         fragmentIssueDetailRecyclerView.layoutManager = layoutManager
-        val adapter = CommentsViewAdapter(issue)
+        val adapter = CommentsViewAdapter(issue, comments)
         fragmentIssueDetailRecyclerView.adapter = adapter
     }
 
     private fun notifyNewCommentAdded() {
         val adapter = fragmentIssueDetailRecyclerView.adapter as CommentsViewAdapter
-        adapter.notifyItemInserted(adapter.itemCount)
+        adapter.notifyDataSetChanged()
     }
 
     private fun showProgress(isLoading: Boolean) {

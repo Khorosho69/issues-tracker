@@ -94,7 +94,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
             FirebaseAuth.getInstance().currentUser?.let {
                 val ownerId = it.uid
                 val date = Calendar.getInstance().time.toString()
-                val issue = Issue(newIssueId, ownerId, issueTitle, issueDescription, date, false, null, null)
+                val issue = Issue(newIssueId, ownerId, issueTitle, issueDescription, date, 0, null)
 
                 val ref = FirebaseDatabase.getInstance().reference.child("issues").child(newIssueId)
                 ref.setValue(issue)
@@ -133,14 +133,9 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         val title = issuesDataSnapshot.child("title")?.value.toString()
         val description = issuesDataSnapshot.child("description")?.value.toString()
         val date = issuesDataSnapshot.child("date")?.value.toString()
-        val status = issuesDataSnapshot.child("status")?.value as Boolean
+        val commentsCount = issuesDataSnapshot.child("comments").childrenCount
 
-        val comments = mutableListOf<Comment>()
-        for (t: DataSnapshot? in issuesDataSnapshot.child("comments").children) {
-            comments.add(t?.getValue(Comment::class.java)!!)
-        }
-
-        return Issue(id, owner, title, description, date, status, comments, null)
+        return Issue(id, owner, title, description, date, commentsCount, null)
     }
 
     fun isUserExist() {

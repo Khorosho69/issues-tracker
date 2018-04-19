@@ -30,11 +30,7 @@ class IssuesViewAdapter(private val issues: MutableList<Issue>, private val list
 
         holder.issueTitle.text = issues[position].title
         holder.issueOwner.text = "From: ${issues[position].ownerRef?.name}"
-        issues[position].comments?.let {
-            holder.commentsCount.text = it.size.toString()
-        } ?: run {
-            holder.commentsCount.text = "0"
-        }
+        holder.commentsCount.text = issues[position].commentsCount.toString()
     }
 
     override fun getItemCount(): Int {

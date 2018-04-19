@@ -11,7 +11,7 @@ import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.squareup.picasso.Picasso
 
-class CommentsViewAdapter(private val issue: Issue) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class CommentsViewAdapter(private val issue: Issue, private var comments: MutableList<Comment>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
@@ -43,26 +43,18 @@ class CommentsViewAdapter(private val issue: Issue) : RecyclerView.Adapter<Recyc
                 }
             }
             is CommentsViewHolder -> {
-                issue.comments?.let {
-                    Picasso.get()
-                            .load(it[position - 1].ownerRef?.profilePictUrl)
-                            .placeholder(R.drawable.profile_image_placeholder)
-                            .into(holder.imageView)
-                    holder.commentOwnerName.text = it[position - 1].ownerRef?.name
-                    holder.commentText.text = it[position - 1].text
-                }
+                Picasso.get()
+                        .load(comments[position - 1].ownerRef?.profilePictUrl)
+                        .placeholder(R.drawable.profile_image_placeholder)
+                        .into(holder.imageView)
+                holder.commentOwnerName.text = comments[position - 1].ownerRef?.name
+                holder.commentText.text = comments[position - 1].text
             }
         }
     }
 
-//    fun notifyNewCommentAdded(comment: Comment){
-//
-//    }
-
     override fun getItemCount(): Int {
-        issue.comments?.let {
-            return it.size + 1
-        } ?: return 1
+        return comments.size + 1
     }
 
     override fun getItemViewType(position: Int): Int {

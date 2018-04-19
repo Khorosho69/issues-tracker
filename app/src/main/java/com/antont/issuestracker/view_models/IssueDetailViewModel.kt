@@ -15,7 +15,8 @@ import java.util.*
 class IssueDetailViewModel(application: Application) : AndroidViewModel(application) {
 
     var issueLiveData: MutableLiveData<Issue> = MutableLiveData()
-    val commentsLiveData: MutableLiveData<Comment> = MutableLiveData()
+    val comments: MutableList<Comment> = mutableListOf()
+    val commentLiveData: MutableLiveData<Comment> = MutableLiveData()
 
     private val valueEventListener: ValueEventListener = object : ValueEventListener {
         override fun onCancelled(databaseError: DatabaseError?) {
@@ -37,8 +38,9 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
         override fun onChildChanged(p0: DataSnapshot?, p1: String?) {}
 
         override fun onChildAdded(dataSnapshot: DataSnapshot?, p1: String?) {
-            val newComment = dataSnapshot?.getValue(Comment::class.java)!!
-            getCommentOwner(newComment)
+            val comment = dataSnapshot?.getValue(Comment::class.java)!!
+            comments.add(comment)
+            getCommentOwner(comments.last())
         }
 
         override fun onChildRemoved(p0: DataSnapshot?) {}
@@ -68,10 +70,9 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
         val title = issuesDataSnapshot.child("title")?.value.toString()
         val description = issuesDataSnapshot.child("description")?.value.toString()
         val date = issuesDataSnapshot.child("date")?.value.toString()
-        val status = issuesDataSnapshot.child("status")?.value as Boolean
+        val commentsCount = issuesDataSnapshot.child("comments").childrenCount
 
-        val comments = mutableListOf<Comment>()
-        val issue = Issue(issueId, issueOwner, title, description, date, status, comments, null)
+        val issue = Issue(issueId, issueOwner, title, description, date, commentsCount, null)
 
         getIssueOwner(issue)
     }
@@ -96,10 +97,6 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
         })
     }
 
-    fun addIssueLiveDataCommentsList(comment: Comment) {
-        issueLiveData.value?.comments?.add(comment)
-    }
-
     private fun getCommentOwner(comment: Comment) {
         val ref = FirebaseDatabase.getInstance().reference.child("users").child(comment.owner)
 
@@ -111,7 +108,7 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
             override fun onDataChange(dataSnapshot: DataSnapshot?) {
                 dataSnapshot?.let { issueData ->
                     comment.ownerRef = issueData.getValue(User::class.java)!!
-                    commentsLiveData.value = comment
+                    commentLiveData.value = comment
                 }
             }
         })

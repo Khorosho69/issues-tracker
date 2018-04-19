@@ -21,7 +21,7 @@
         </activity>
         <activity
             android:name=".activities.MainActivity"
-            android:label="@string/title_activity_issues"
+            android:label="@string/nav_menu_all_issues"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <service
