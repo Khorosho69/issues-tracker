@@ -4,7 +4,6 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
@@ -36,16 +35,13 @@ class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
 
         showActionButton(true)
 
+        getIssues(listType)
+
         issuesRefreshLayout.setOnRefreshListener { issuesViewModel.getIssueListRequest(listType) }
-        issuesViewModel.issuesLivaData.observe(this, Observer { mutableList ->
+        issuesViewModel.issueListLiveData.observe(this, Observer { mutableList ->
             mutableList?.let { setupRecyclerView(it) }
         })
-
-        issuesViewModel.issuesLivaData.value?.let {
-            setupRecyclerView(it)
-        } ?: kotlin.run {
-            getIssues(listType)
-        }
+        issuesViewModel.issueLiveData.observe(this, Observer { notifyIssue() })
     }
 
     override fun onItemSelected(issueId: String) {
@@ -60,6 +56,11 @@ class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
         this.listType = listType
         showProgress(true)
         issuesViewModel.getIssueListRequest(listType)
+    }
+
+    private fun notifyIssue() {
+        val adapter = issuesRecyclerView.adapter as IssuesViewAdapter
+        adapter.notifyDataSetChanged()
     }
 
     private fun setupRecyclerView(issues: MutableList<Issue>) {

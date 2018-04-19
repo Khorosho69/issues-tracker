@@ -13,7 +13,6 @@ import com.antont.issuestracker.R
 import com.antont.issuestracker.activities.LoginActivity
 import com.antont.issuestracker.fragments.IssueDetailFragment
 import com.antont.issuestracker.fragments.IssueListFragment
-import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.models.User
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -22,51 +21,89 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.iid.FirebaseInstanceId
 import java.util.*
-import kotlin.coroutines.experimental.coroutineContext
 
 class IssuesViewModel(application: Application) : AndroidViewModel(application) {
 
     private lateinit var databaseReference: DatabaseReference
+    val issueLiveData: MutableLiveData<Issue> = MutableLiveData()
+    val issueListLiveData: MutableLiveData<MutableList<Issue>> = MutableLiveData()
 
-    val issuesLivaData: MutableLiveData<MutableList<Issue>> = MutableLiveData()
-
-    private val valueEventListener = object : ValueEventListener {
+    private val childEventListener = object : ChildEventListener {
         override fun onCancelled(databaseError: DatabaseError?) {
-            databaseError?.let { error -> onRequestCanceled(error) }
+            databaseError?.let { onRequestCanceled(it) }
         }
 
-        override fun onDataChange(dataSnapshot: DataSnapshot?) {
-            dataSnapshot?.let {
-                val issues: MutableList<Issue> = mutableListOf()
+        override fun onChildMoved(p0: DataSnapshot?, p1: String?) {}
 
-                for (issuesDataSnapshot: DataSnapshot? in dataSnapshot.children) {
-                    issuesDataSnapshot?.let { issues.add(getIssueFromDataSnapshot(it)) }
-                }
-                if (issues.isNotEmpty()) {
-                    getIssuesOwners(0, issues)
-                } else {
-                    issuesLivaData.value = issues
-                    val context = getApplication<Application>().applicationContext
-                    Toast.makeText(context, context.getString(R.string.no_issues_message), Toast.LENGTH_SHORT).show()
+        override fun onChildChanged(dataSnapshot: DataSnapshot?, p1: String?) {
+            dataSnapshot?.let {
+                val issue = getIssueFromDataSnapshot(dataSnapshot)
+                updateIssueById(issue)
+                issueLiveData.value = null
+            }
+        }
+
+        override fun onChildAdded(dataSnapshot: DataSnapshot?, p1: String?) {
+            dataSnapshot?.let {
+                val issue = getIssueFromDataSnapshot(dataSnapshot)
+                issueListLiveData.value?.let {
+                    it.add(issue)
+                    getIssueOwner(it.last())
                 }
             }
         }
+
+        override fun onChildRemoved(dataSnapshot: DataSnapshot?) {}
     }
 
     fun getIssueListRequest(listType: IssueListFragment.ListType) {
+        issueListLiveData.value = mutableListOf()
         if (isDeviceOnline()) {
             databaseReference = FirebaseDatabase.getInstance().reference.child("issues")
 
             if (listType == IssueListFragment.ListType.MY_ISSUES) {
                 val query = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
-                query.addValueEventListener(valueEventListener)
+                query.addChildEventListener(childEventListener)
             } else {
-                databaseReference.addValueEventListener(valueEventListener)
+                databaseReference.addChildEventListener(childEventListener)
             }
         } else {
-            issuesLivaData.value = mutableListOf()
+            issueLiveData.value = null
             showNoInternetToast()
         }
+    }
+
+    private fun updateIssueById(issue: Issue) {
+        issueListLiveData.value?.find({ i -> i.id == issue.id })?.commentsCount = issue.commentsCount
+    }
+
+    fun getIssueFromDataSnapshot(issuesDataSnapshot: DataSnapshot): Issue {
+        val id = issuesDataSnapshot.child("id")?.value.toString()
+        val owner = issuesDataSnapshot.child("owner")?.value.toString()
+        val title = issuesDataSnapshot.child("title")?.value.toString()
+        val description = issuesDataSnapshot.child("description")?.value.toString()
+        val date = issuesDataSnapshot.child("date")?.value.toString()
+        val commentsCount = issuesDataSnapshot.child("comments").childrenCount
+
+        return Issue(id, owner, title, description, date, commentsCount, null)
+    }
+
+    private fun getIssueOwner(issue: Issue) {
+        val issueId = issue.owner
+        val ref = FirebaseDatabase.getInstance().reference.child("users").child(issueId)
+
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onCancelled(databaseError: DatabaseError?) {
+                databaseError?.let { onRequestCanceled(it) }
+            }
+
+            override fun onDataChange(dataSnapshot: DataSnapshot?) {
+                dataSnapshot?.let {
+                    issue.ownerRef = it.getValue(User::class.java)!!
+                    issueLiveData.value = issue
+                }
+            }
+        })
     }
 
     private fun showNoInternetToast() {
@@ -84,7 +121,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun removeValueListener() {
-        databaseReference.removeEventListener(valueEventListener)
+        databaseReference.removeEventListener(childEventListener)
     }
 
     fun postIssue(issueTitle: String, issueDescription: String) {
@@ -102,40 +139,6 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         } else {
             showNoInternetToast()
         }
-    }
-
-    private fun getIssuesOwners(issuePos: Int, issues: MutableList<Issue>) {
-        val issueId = issues[issuePos].owner
-        val ref = FirebaseDatabase.getInstance().reference.child("users").child(issueId)
-
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onCancelled(databaseError: DatabaseError?) {
-                databaseError?.let { onRequestCanceled(it) }
-            }
-
-            override fun onDataChange(dataSnapshot: DataSnapshot?) {
-                dataSnapshot?.let {
-                    issues[issuePos].ownerRef = it.getValue(User::class.java)!!
-                    if (issuePos < issues.size - 1) {
-                        getIssuesOwners(issuePos + 1, issues)
-                    } else {
-                        issuesLivaData.value?.clear()
-                        issuesLivaData.value = issues
-                    }
-                }
-            }
-        })
-    }
-
-    fun getIssueFromDataSnapshot(issuesDataSnapshot: DataSnapshot): Issue {
-        val id = issuesDataSnapshot.child("id")?.value.toString()
-        val owner = issuesDataSnapshot.child("owner")?.value.toString()
-        val title = issuesDataSnapshot.child("title")?.value.toString()
-        val description = issuesDataSnapshot.child("description")?.value.toString()
-        val date = issuesDataSnapshot.child("date")?.value.toString()
-        val commentsCount = issuesDataSnapshot.child("comments").childrenCount
-
-        return Issue(id, owner, title, description, date, commentsCount, null)
     }
 
     fun isUserExist() {
