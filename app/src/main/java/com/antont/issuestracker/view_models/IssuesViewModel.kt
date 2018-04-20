@@ -25,6 +25,7 @@ import java.util.*
 class IssuesViewModel(application: Application) : AndroidViewModel(application) {
 
     private lateinit var databaseReference: DatabaseReference
+    private lateinit var queryReference: Query
     val issueLiveData: MutableLiveData<Issue> = MutableLiveData()
     val issueListLiveData: MutableLiveData<MutableList<Issue>> = MutableLiveData()
 
@@ -60,10 +61,12 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         issueListLiveData.value = mutableListOf()
         if (isDeviceOnline()) {
             databaseReference = FirebaseDatabase.getInstance().reference.child("issues")
+            queryReference = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
+
+            removeValueListener()
 
             if (listType == IssueListFragment.ListType.MY_ISSUES) {
-                val query = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
-                query.addChildEventListener(childEventListener)
+                queryReference.addChildEventListener(childEventListener)
             } else {
                 databaseReference.addChildEventListener(childEventListener)
             }
@@ -122,6 +125,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
 
     fun removeValueListener() {
         databaseReference.removeEventListener(childEventListener)
+        queryReference.removeEventListener(childEventListener)
     }
 
     fun postIssue(issueTitle: String, issueDescription: String) {
