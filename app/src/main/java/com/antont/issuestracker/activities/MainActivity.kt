@@ -91,9 +91,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 showCreateNewIssueDialog()
             }
             R.id.nav_all_issues -> {
+                this.setTitle(R.string.nav_menu_all_issues)
                 issuesViewModel.startIssueListFragment(supportFragmentManager, IssueListFragment.ListType.ALL_ISSUES)
             }
             R.id.nav_my_issues -> {
+                this.setTitle(R.string.nav_menu_user_issues_list_title)
                 issuesViewModel.startIssueListFragment(supportFragmentManager, IssueListFragment.ListType.MY_ISSUES)
             }
             R.id.nav_logout -> {

@@ -26,6 +26,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
 
     private lateinit var databaseReference: DatabaseReference
     private lateinit var queryReference: Query
+
     val issueLiveData: MutableLiveData<Issue> = MutableLiveData()
     val issueListLiveData: MutableLiveData<MutableList<Issue>> = MutableLiveData()
 
@@ -145,6 +146,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    // Send a request to the firebase server to check if there is this user in the database
     fun isUserExist() {
         FirebaseAuth.getInstance().currentUser?.let { firebaseUser ->
             val userId = firebaseUser.uid
@@ -157,6 +159,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
 
                 override fun onDataChange(dataSnapshot: DataSnapshot?) {
                     dataSnapshot?.let {
+                        // If data is null, then need to create a new user in the firebase database
                         if (it.value == null) {
                             val userName = firebaseUser.displayName
                             val email = firebaseUser.email
@@ -175,7 +178,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun onRequestCanceled(databaseError: DatabaseError) {
-        Toast.makeText(getApplication<Application>().applicationContext, "${databaseError.details}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(getApplication<Application>().applicationContext, databaseError.details, Toast.LENGTH_SHORT).show()
     }
 
     private fun logoutFromAccount() {

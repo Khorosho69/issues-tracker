@@ -32,7 +32,7 @@ class CommentsViewAdapter(private val issue: Issue, private var comments: Mutabl
             is HeaderViewHolder -> {
                 holder.issueTitle.text = issue.title
                 holder.issueDescription.text = issue.description
-                holder.issueCreatedDate.text = "Created: ${issue.date}"
+                holder.issueCreatedDate.text = holder.itemView.resources.getString(R.string.issue_detail_created_prefiled, issue.date)
                 issue.ownerRef?.let {
                     Picasso.get()
                             .load(it.profilePictUrl)

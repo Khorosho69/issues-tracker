@@ -29,7 +29,7 @@ class IssuesViewAdapter(private val issues: MutableList<Issue>, private val list
                 .into(holder.imageView)
 
         holder.issueTitle.text = issues[position].title
-        holder.issueOwner.text = "From: ${issues[position].ownerRef?.name}"
+        holder.issueOwner.text = holder.itemView.resources.getString(R.string.issue_owner_prefiled_text, issues[position].ownerRef?.name)
         holder.commentsCount.text = issues[position].commentsCount.toString()
     }
 

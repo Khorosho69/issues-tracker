@@ -46,6 +46,11 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
         override fun onChildRemoved(p0: DataSnapshot?) {}
     }
 
+    fun getIssuesDetailRequest(issueId: String) {
+        val databaseRef = FirebaseDatabase.getInstance().reference.child("issues").child(issueId)
+        databaseRef.addListenerForSingleValueEvent(valueEventListener)
+    }
+
     fun postComment(commentText: String) {
         issueLiveData.value?.let {
             val ref = FirebaseDatabase.getInstance().reference.child("issues").child(it.id).child("comments").push()
@@ -57,11 +62,6 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
                 ref.setValue(comment)
             }
         }
-    }
-
-    fun getIssuesDetailRequest(issueId: String) {
-        val databaseRef = FirebaseDatabase.getInstance().reference.child("issues").child(issueId)
-        databaseRef.addListenerForSingleValueEvent(valueEventListener)
     }
 
     fun getIssueFromDataSnapshot(issuesDataSnapshot: DataSnapshot) {
@@ -115,6 +115,6 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     private fun onRequestCanceled(databaseError: DatabaseError) {
-        Toast.makeText(getApplication<Application>().applicationContext, "${databaseError.details}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(getApplication<Application>().applicationContext, databaseError.details, Toast.LENGTH_SHORT).show()
     }
 }
