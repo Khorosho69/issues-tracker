@@ -30,17 +30,7 @@ class CommentsViewAdapter(private val issue: Issue, private var comments: Mutabl
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is HeaderViewHolder -> {
-                holder.issueTitle.text = issue.title
-                holder.issueDescription.text = issue.description
-                holder.issueCreatedDate.text = holder.itemView.resources.getString(R.string.issue_detail_created_prefiled, issue.date)
-                issue.ownerRef?.let {
-                    Picasso.get()
-                            .load(it.profilePictUrl)
-                            .placeholder(R.drawable.profile_image_placeholder)
-                            .into(holder.issueOwnerProfilePict)
-                    holder.issueOwnerName.text = it.name
-                    holder.issueOwnerEmail.text = it.email
-                }
+                bindHeader(holder)
             }
             is CommentsViewHolder -> {
                 Picasso.get()
@@ -50,6 +40,20 @@ class CommentsViewAdapter(private val issue: Issue, private var comments: Mutabl
                 holder.commentOwnerName.text = comments[position - 1].ownerRef?.name
                 holder.commentText.text = comments[position - 1].text
             }
+        }
+    }
+
+    private fun bindHeader(holder: HeaderViewHolder) {
+        holder.issueTitle.text = issue.title
+        holder.issueDescription.text = issue.description
+        holder.issueCreatedDate.text = holder.itemView.resources.getString(R.string.issue_detail_created_prefiled, issue.date)
+        issue.ownerRef?.let {
+            Picasso.get()
+                    .load(it.profilePictUrl)
+                    .placeholder(R.drawable.profile_image_placeholder)
+                    .into(holder.issueOwnerProfilePict)
+            holder.issueOwnerName.text = it.name
+            holder.issueOwnerEmail.text = it.email
         }
     }
 

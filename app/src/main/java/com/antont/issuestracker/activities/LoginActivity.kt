@@ -18,15 +18,19 @@ class LoginActivity : AppCompatActivity() {
 
         mLoginViewModel = ViewModelProviders.of(this).get(LoginViewModel::class.java)
 
-        if (!mLoginViewModel.isUserAuthorized()) {
-            googleLoginButton.setOnClickListener {
-                startActivityForResult(mLoginViewModel.getGoogleSingInIntent(), LoginViewModel.GOOGLE_SIGN_IN_CODE)
-            }
+        if (mLoginViewModel.isUserAuthorized()) {
+            mLoginViewModel.starIssuesActivity()
+            finish()
+            return
+        }
+        mLoginViewModel.writeUserToFirebaseDatabase()
+        googleLoginButton.setOnClickListener {
+            startActivityForResult(mLoginViewModel.getGoogleSingInIntent(), LoginViewModel.GOOGLE_SIGN_IN_CODE)
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        data?.let { intent -> mLoginViewModel.onActivityResult(requestCode, intent) }
+        data?.let { mLoginViewModel.onActivityResult(requestCode, resultCode, it) }
     }
 }

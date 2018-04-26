@@ -9,9 +9,9 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 
 import com.antont.issuestracker.R
+import com.antont.issuestracker.activities.MainActivity
 import com.antont.issuestracker.adapters.CommentsViewAdapter
 import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
@@ -57,8 +57,8 @@ class IssueDetailFragment : Fragment() {
             postCommentButton.setOnClickListener {
                 val commentText = commentTextEditText.text.toString()
                 if (commentText.isNotEmpty()) {
-                    issueDetailViewModel.postComment(commentTextEditText.text.toString())
-                    fragmentIssueDetailRecyclerView.scrollToPosition(fragmentIssueDetailRecyclerView.adapter.itemCount - 1)
+                    val user = (activity as MainActivity).currentUser
+                    issueDetailViewModel.postComment(user, commentTextEditText.text.toString())
                     commentTextEditText.text.clear()
                 }
             }
@@ -67,15 +67,15 @@ class IssueDetailFragment : Fragment() {
 
     private fun setupRecyclerView(issue: Issue, comments: MutableList<Comment>) {
         showProgress(false)
-        val layoutManager = LinearLayoutManager(context, LinearLayout.VERTICAL, false)
+        val layoutManager = LinearLayoutManager(context)
         fragmentIssueDetailRecyclerView.layoutManager = layoutManager
         val adapter = CommentsViewAdapter(issue, comments)
         fragmentIssueDetailRecyclerView.adapter = adapter
     }
 
     private fun notifyNewCommentAdded() {
-        val adapter = fragmentIssueDetailRecyclerView.adapter as CommentsViewAdapter
-        adapter.notifyDataSetChanged()
+        fragmentIssueDetailRecyclerView.adapter.notifyDataSetChanged()
+        fragmentIssueDetailRecyclerView.smoothScrollToPosition(fragmentIssueDetailRecyclerView.adapter.itemCount)
     }
 
     private fun showProgress(isLoading: Boolean) {

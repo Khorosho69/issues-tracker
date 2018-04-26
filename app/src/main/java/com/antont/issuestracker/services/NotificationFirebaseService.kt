@@ -31,7 +31,7 @@ class NotificationFirebaseService : FirebaseMessagingService() {
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT)
         val notificationBuilder = NotificationCompat.Builder(this, CHANEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Title")
+                .setContentTitle("Notification")
                 .setContentText(message)
 
         notificationBuilder.setContentIntent(pendingIntent)

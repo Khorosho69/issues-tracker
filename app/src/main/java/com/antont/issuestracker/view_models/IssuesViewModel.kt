@@ -7,28 +7,28 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.support.v4.app.FragmentManager
-import android.util.Log
 import android.widget.Toast
 import com.antont.issuestracker.R
 import com.antont.issuestracker.activities.LoginActivity
 import com.antont.issuestracker.fragments.IssueDetailFragment
 import com.antont.issuestracker.fragments.IssueListFragment
+import com.antont.issuestracker.fragments.IssueListFragment.*
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.models.User
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import com.google.firebase.iid.FirebaseInstanceId
 import java.util.*
 
 class IssuesViewModel(application: Application) : AndroidViewModel(application) {
 
-    private lateinit var databaseReference: DatabaseReference
-    private lateinit var queryReference: Query
+    private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().reference.child("issues")
+    private var queryReference: Query = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
 
-    val issueLiveData: MutableLiveData<Issue> = MutableLiveData()
-    val issueListLiveData: MutableLiveData<MutableList<Issue>> = MutableLiveData()
+    val issueList: MutableList<Issue> = mutableListOf()
+
+    val issueLoaded = MutableLiveData<Boolean>()
 
     private val childEventListener = object : ChildEventListener {
         override fun onCancelled(databaseError: DatabaseError?) {
@@ -41,44 +41,40 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
             dataSnapshot?.let {
                 val issue = getIssueFromDataSnapshot(dataSnapshot)
                 updateIssueById(issue)
-                issueLiveData.value = null
+                issueLoaded.value = true
             }
         }
 
         override fun onChildAdded(dataSnapshot: DataSnapshot?, p1: String?) {
             dataSnapshot?.let {
                 val issue = getIssueFromDataSnapshot(dataSnapshot)
-                issueListLiveData.value?.let {
-                    it.add(issue)
-                    getIssueOwner(it.last())
-                }
+                issueList.add(issue)
+                fetchIssueOwner(issueList.last())
             }
         }
 
         override fun onChildRemoved(dataSnapshot: DataSnapshot?) {}
     }
 
-    fun getIssueListRequest(listType: IssueListFragment.ListType) {
-        issueListLiveData.value = mutableListOf()
+    fun fetchIssueList(listType: IssueListFragment.ListType) {
         if (isDeviceOnline()) {
-            databaseReference = FirebaseDatabase.getInstance().reference.child("issues")
-            queryReference = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
+
+            issueList.clear()
 
             removeValueListener()
 
-            if (listType == IssueListFragment.ListType.MY_ISSUES) {
+            if (listType == ListType.MY_ISSUES) {
                 queryReference.addChildEventListener(childEventListener)
             } else {
                 databaseReference.addChildEventListener(childEventListener)
             }
         } else {
-            issueLiveData.value = null
             showNoInternetToast()
         }
     }
 
     private fun updateIssueById(issue: Issue) {
-        issueListLiveData.value?.find({ i -> i.id == issue.id })?.commentsCount = issue.commentsCount
+        issueList.find({ i -> i.id == issue.id })?.commentsCount = issue.commentsCount
     }
 
     fun getIssueFromDataSnapshot(issuesDataSnapshot: DataSnapshot): Issue {
@@ -92,7 +88,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         return Issue(id, owner, title, description, date, commentsCount, null)
     }
 
-    private fun getIssueOwner(issue: Issue) {
+    private fun fetchIssueOwner(issue: Issue) {
         val issueId = issue.owner
         val ref = FirebaseDatabase.getInstance().reference.child("users").child(issueId)
 
@@ -104,7 +100,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
             override fun onDataChange(dataSnapshot: DataSnapshot?) {
                 dataSnapshot?.let {
                     issue.ownerRef = it.getValue(User::class.java)!!
-                    issueLiveData.value = issue
+                    issueLoaded.value = true
                 }
             }
         })
@@ -129,51 +125,18 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         queryReference.removeEventListener(childEventListener)
     }
 
-    fun postIssue(issueTitle: String, issueDescription: String) {
+    fun postIssue(user: User, issueTitle: String, issueDescription: String) {
         if (isDeviceOnline()) {
             val newIssueId = FirebaseDatabase.getInstance().reference.child("issues").push().key
 
-            FirebaseAuth.getInstance().currentUser?.let {
-                val ownerId = it.uid
-                val date = Calendar.getInstance().time.toString()
-                val issue = Issue(newIssueId, ownerId, issueTitle, issueDescription, date, 0, null)
+            val ownerId = user.userId
+            val date = Calendar.getInstance().time.toString()
+            val issue = Issue(newIssueId, ownerId, issueTitle, issueDescription, date, 0, null)
 
-                val ref = FirebaseDatabase.getInstance().reference.child("issues").child(newIssueId)
-                ref.setValue(issue)
-            }
+            val ref = FirebaseDatabase.getInstance().reference.child("issues").child(newIssueId)
+            ref.setValue(issue)
         } else {
             showNoInternetToast()
-        }
-    }
-
-    // Send a request to the firebase server to check if there is this user in the database
-    fun isUserExist() {
-        FirebaseAuth.getInstance().currentUser?.let { firebaseUser ->
-            val userId = firebaseUser.uid
-            val ref = FirebaseDatabase.getInstance().reference.child("users").child(userId)
-
-            ref.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onCancelled(databaseError: DatabaseError?) {
-                    databaseError?.let { Log.d(this::javaClass.name, it.message) }
-                }
-
-                override fun onDataChange(dataSnapshot: DataSnapshot?) {
-                    dataSnapshot?.let {
-                        // If data is null, then need to create a new user in the firebase database
-                        if (it.value == null) {
-                            val userName = firebaseUser.displayName
-                            val email = firebaseUser.email
-                            val profilePictUrl = firebaseUser.photoUrl.toString()
-                            val token = FirebaseInstanceId.getInstance().token
-
-                            token?.let {
-                                val user = User(userId, userName!!, email!!, profilePictUrl, token)
-                                ref.setValue(user)
-                            }
-                        }
-                    }
-                }
-            })
         }
     }
 
@@ -195,8 +158,12 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
     fun startIssueListFragment(supportFragmentManager: FragmentManager, listType: IssueListFragment.ListType) {
         var fragment = supportFragmentManager.findFragmentByTag(IssueListFragment.FRAGMENT_TAG)
         fragment?.let {
-            (it as IssueListFragment).getIssues(listType)
+            (it as IssueListFragment).fetchIssues(listType)
         } ?: kotlin.run { fragment = IssueListFragment() }
+        if (fragment.isVisible) {
+            return
+        }
+        supportFragmentManager.popBackStackImmediate()
         supportFragmentManager
                 .beginTransaction()
                 .replace(R.id.issues_frame, fragment, IssueListFragment.FRAGMENT_TAG)
@@ -206,11 +173,20 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
     fun startIssueDetailFragment(supportFragmentManager: FragmentManager, issueId: String) {
         var fragment = supportFragmentManager.findFragmentByTag(IssueDetailFragment.FRAGMENT_TAG)
         fragment ?: kotlin.run { fragment = IssueDetailFragment.newInstance(issueId) }
+        if (fragment.isVisible) {
+            return
+        }
         supportFragmentManager
                 .beginTransaction()
                 .replace(R.id.issues_frame, fragment, IssueDetailFragment.FRAGMENT_TAG)
-                .addToBackStack(IssueDetailFragment.FRAGMENT_TAG)
+                .addToBackStack(IssueListFragment.FRAGMENT_TAG)
                 .commit()
+
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        removeValueListener()
     }
 
     fun startLoginActivity() {

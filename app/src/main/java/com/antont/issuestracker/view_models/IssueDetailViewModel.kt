@@ -51,16 +51,16 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
         databaseRef.addListenerForSingleValueEvent(valueEventListener)
     }
 
-    fun postComment(commentText: String) {
+    fun postComment(user: User, commentText: String) {
         issueLiveData.value?.let {
             val ref = FirebaseDatabase.getInstance().reference.child("issues").child(it.id).child("comments").push()
-            FirebaseAuth.getInstance().currentUser?.let {
-                val commentOwner = it.uid
-                val date = Calendar.getInstance().time.toString()
 
-                val comment = Comment(commentOwner, commentText, date, null)
-                ref.setValue(comment)
-            }
+            val commentOwner = user.userId
+            val date = Calendar.getInstance().time.toString()
+
+            val comment = Comment(commentOwner, commentText, date, null)
+            ref.setValue(comment)
+
         }
     }
 
