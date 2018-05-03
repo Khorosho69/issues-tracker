@@ -7,15 +7,11 @@ import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-
 import com.antont.issuestracker.R
-import com.antont.issuestracker.activities.MainActivity
 import com.antont.issuestracker.adapters.IssuesViewAdapter
-import com.antont.issuestracker.databinding.FragmentIssueDetailBinding
 import com.antont.issuestracker.databinding.FragmentIssueListBinding
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.view_models.IssuesViewModel
@@ -23,21 +19,23 @@ import kotlinx.android.synthetic.main.fragment_issue_list.*
 
 class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
 
-    private val issuesViewModel: IssuesViewModel by lazy {
-        ViewModelProviders.of(activity!!).get(IssuesViewModel::class.java)
-    }
+    private lateinit var issuesViewModel: IssuesViewModel
+    private lateinit var binding: FragmentIssueListBinding
     private var listType: ListType = ListType.ALL_ISSUES
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val binding: FragmentIssueListBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_issue_list, container, false)
-        binding.viewModel = issuesViewModel
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_issue_list, container, false)
+        activity?.let {
+            issuesViewModel = ViewModelProviders.of(it).get(IssuesViewModel::class.java)
+            binding.viewModel = issuesViewModel
+        }
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        showActionButton(true)
+        issuesViewModel.postIssueButtonVisibility.set(View.VISIBLE)
 
         setupRecyclerView(issuesViewModel.issueList)
         fetchIssues(listType)
@@ -53,7 +51,7 @@ class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
             issuesViewModel.removeValueListener()
             issuesViewModel.startIssueDetailFragment(it.supportFragmentManager, issueId)
         }
-        showActionButton(false)
+        issuesViewModel.postIssueButtonVisibility.set(View.GONE)
     }
 
     fun fetchIssues(listType: ListType) {
@@ -68,14 +66,6 @@ class IssueListFragment : Fragment(), IssuesViewAdapter.OnItemSelectedCallback {
     private fun setupRecyclerView(issues: MutableList<Issue>) {
         issuesRecyclerView.layoutManager = LinearLayoutManager(context)
         issuesRecyclerView.adapter = IssuesViewAdapter(issues, this)
-    }
-
-    // TODO DataBinding
-    private fun showActionButton(visible: Boolean) {
-        if (activity is MainActivity) {
-            val parentActivity = activity as MainActivity
-            parentActivity.changeActionButtonVisibility(visible)
-        }
     }
 
     enum class ListType constructor(val value: Int) { ALL_ISSUES(0), MY_ISSUES(1) }

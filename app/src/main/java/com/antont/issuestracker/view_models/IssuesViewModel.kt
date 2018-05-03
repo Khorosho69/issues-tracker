@@ -27,6 +27,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
 
     var recyclerViewVisibility = ObservableInt(View.GONE)
     var progressBarVisibility = ObservableInt(View.VISIBLE)
+    val postIssueButtonVisibility = ObservableInt(View.VISIBLE)
 
     private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().reference.child("issues")
     private var queryReference: Query = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)

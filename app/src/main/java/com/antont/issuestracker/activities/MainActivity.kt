@@ -1,17 +1,18 @@
 package com.antont.issuestracker.activities
 
 import android.arch.lifecycle.ViewModelProviders
+import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
-import android.view.View
 import com.antont.issuestracker.R
 import com.antont.issuestracker.UserRepository
+import com.antont.issuestracker.databinding.ActivityMainBinding
 import com.antont.issuestracker.fragments.CreateIssueDialog
-import com.antont.issuestracker.fragments.IssueListFragment.*
+import com.antont.issuestracker.fragments.IssueListFragment.ListType
 import com.antont.issuestracker.models.User
 import com.antont.issuestracker.view_models.IssuesViewModel
 import com.squareup.picasso.Picasso
@@ -29,7 +30,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        val binding: ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        binding.includedContent.viewModel = issuesViewModel
         setSupportActionBar(toolbar)
 
         fab.setOnClickListener { showCreateNewIssueDialog() }
@@ -40,7 +42,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         navigationView.setNavigationItemSelectedListener(this)
-        issuesViewModel.startIssueListFragment(supportFragmentManager, ListType.ALL_ISSUES)
+
+        if (issuesViewModel.issueList.isEmpty()) {
+            issuesViewModel.startIssueListFragment(supportFragmentManager, ListType.ALL_ISSUES)
+        }
 
         UserRepository().fetchCurrentUser(this)
 
@@ -70,10 +75,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         navigationHeaderView.navigationHeaderUserName.text = user.name
         navigationHeaderView.navigationHeaderEmail.text = user.email
-    }
-
-    fun changeActionButtonVisibility(visible: Boolean) {
-        fab.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {

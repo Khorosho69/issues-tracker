@@ -55,7 +55,11 @@ class IssueDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         selectedIssueId.let {
 
-            issueDetailViewModel.fetchIssuesDetail(it)
+            if (issueDetailViewModel.issueLiveData.value?.id == it) {
+                setupRecyclerView(issueDetailViewModel.issueLiveData.value!!, issueDetailViewModel.comments)
+            } else {
+                issueDetailViewModel.fetchIssuesDetail(it)
+            }
 
             postCommentButton.setOnClickListener {
                 val commentText = commentTextEditText.text.toString()

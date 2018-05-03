@@ -55,6 +55,7 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
 
     fun fetchIssuesDetail(issueId: String) {
         showProgress(true)
+        comments.clear()
         val databaseRef = FirebaseDatabase.getInstance().reference.child("issues").child(issueId)
         databaseRef.addListenerForSingleValueEvent(valueEventListener)
     }
