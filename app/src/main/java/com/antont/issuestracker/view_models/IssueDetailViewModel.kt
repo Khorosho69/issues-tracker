@@ -3,16 +3,23 @@ package com.antont.issuestracker.view_models
 import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
+import android.databinding.ObservableInt
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.models.User
+import com.google.android.gms.common.data.DataBufferObserver
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import kotlinx.android.synthetic.main.fragment_issue_detail.*
 import java.util.*
 
 class IssueDetailViewModel(application: Application) : AndroidViewModel(application) {
+
+    var recyclerViewVisibility = ObservableInt(View.GONE)
+    var progressBarVisibility = ObservableInt(View.VISIBLE)
 
     var issueLiveData: MutableLiveData<Issue> = MutableLiveData()
     val comments: MutableList<Comment> = mutableListOf()
@@ -46,7 +53,8 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
         override fun onChildRemoved(p0: DataSnapshot?) {}
     }
 
-    fun getIssuesDetailRequest(issueId: String) {
+    fun fetchIssuesDetail(issueId: String) {
+        showProgress(true)
         val databaseRef = FirebaseDatabase.getInstance().reference.child("issues").child(issueId)
         databaseRef.addListenerForSingleValueEvent(valueEventListener)
     }
@@ -90,6 +98,10 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
                     issueRef.ownerRef = issueData.getValue(User::class.java)!!
                     issueLiveData.value = issueRef
 
+                    if (issueRef.commentsCount == 0L) {
+                        showProgress(false)
+                    }
+
                     val commentsRef = FirebaseDatabase.getInstance().reference.child("issues").child(issueRef.id).child("comments")
                     commentsRef.addChildEventListener(childEventListener)
                 }
@@ -109,9 +121,15 @@ class IssueDetailViewModel(application: Application) : AndroidViewModel(applicat
                 dataSnapshot?.let { issueData ->
                     comment.ownerRef = issueData.getValue(User::class.java)!!
                     commentLiveData.value = comment
+                    showProgress(false)
                 }
             }
         })
+    }
+
+    private fun showProgress(isLoading: Boolean) {
+        recyclerViewVisibility.set(if (isLoading) View.GONE else View.VISIBLE)
+        progressBarVisibility.set(if (isLoading) View.VISIBLE else View.GONE)
     }
 
     private fun onRequestCanceled(databaseError: DatabaseError) {

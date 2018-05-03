@@ -18,12 +18,13 @@ class LoginActivity : AppCompatActivity() {
 
         mLoginViewModel = ViewModelProviders.of(this).get(LoginViewModel::class.java)
 
+        mLoginViewModel.writeUserToFirebaseDatabase()
+
         if (mLoginViewModel.isUserAuthorized()) {
             mLoginViewModel.starIssuesActivity()
             finish()
             return
         }
-        mLoginViewModel.writeUserToFirebaseDatabase()
         googleLoginButton.setOnClickListener {
             startActivityForResult(mLoginViewModel.getGoogleSingInIntent(), LoginViewModel.GOOGLE_SIGN_IN_CODE)
         }

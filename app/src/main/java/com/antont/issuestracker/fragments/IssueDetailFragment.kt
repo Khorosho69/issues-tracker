@@ -3,6 +3,7 @@ package com.antont.issuestracker.fragments
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
+import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
@@ -13,6 +14,7 @@ import android.view.ViewGroup
 import com.antont.issuestracker.R
 import com.antont.issuestracker.activities.MainActivity
 import com.antont.issuestracker.adapters.CommentsViewAdapter
+import com.antont.issuestracker.databinding.FragmentIssueDetailBinding
 import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.view_models.IssueDetailViewModel
@@ -20,7 +22,9 @@ import kotlinx.android.synthetic.main.fragment_issue_detail.*
 
 class IssueDetailFragment : Fragment() {
 
-    private lateinit var issueDetailViewModel: IssueDetailViewModel
+    private val issueDetailViewModel: IssueDetailViewModel by lazy {
+        ViewModelProviders.of(this).get(IssueDetailViewModel::class.java)
+    }
     private lateinit var selectedIssueId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,13 +35,14 @@ class IssueDetailFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_issue_detail, container, false)
+        val binding: FragmentIssueDetailBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_issue_detail, container, false)
+        binding.viewModel = issueDetailViewModel
+        return binding.root
     }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        issueDetailViewModel = ViewModelProviders.of(this).get(IssueDetailViewModel::class.java)
         issueDetailViewModel.issueLiveData.observe(this, Observer { it?.let { it1 -> setupRecyclerView(it1, issueDetailViewModel.comments) } })
         issueDetailViewModel.commentLiveData.observe(this, Observer {
             it?.let {
@@ -50,9 +55,7 @@ class IssueDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         selectedIssueId.let {
 
-            showProgress(true)
-
-            issueDetailViewModel.getIssuesDetailRequest(it)
+            issueDetailViewModel.fetchIssuesDetail(it)
 
             postCommentButton.setOnClickListener {
                 val commentText = commentTextEditText.text.toString()
@@ -66,7 +69,6 @@ class IssueDetailFragment : Fragment() {
     }
 
     private fun setupRecyclerView(issue: Issue, comments: MutableList<Comment>) {
-        showProgress(false)
         val layoutManager = LinearLayoutManager(context)
         fragmentIssueDetailRecyclerView.layoutManager = layoutManager
         val adapter = CommentsViewAdapter(issue, comments)
@@ -76,11 +78,6 @@ class IssueDetailFragment : Fragment() {
     private fun notifyNewCommentAdded() {
         fragmentIssueDetailRecyclerView.adapter.notifyDataSetChanged()
         fragmentIssueDetailRecyclerView.smoothScrollToPosition(fragmentIssueDetailRecyclerView.adapter.itemCount)
-    }
-
-    private fun showProgress(isLoading: Boolean) {
-        fragmentIssueDetailProgress.visibility = if (isLoading) View.VISIBLE else View.GONE
-        fragmentIssueDetailRecyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
     }
 
     companion object {

@@ -20,15 +20,17 @@ import kotlinx.android.synthetic.main.app_bar_issues.*
 import kotlinx.android.synthetic.main.nav_header_issues.view.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UserRepository.OnUserFetched {
-    private lateinit var issuesViewModel: IssuesViewModel
+
+    private val issuesViewModel: IssuesViewModel by lazy {
+        ViewModelProviders.of(this).get(IssuesViewModel::class.java)
+    }
+
     lateinit var currentUser: User
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-        issuesViewModel = ViewModelProviders.of(this).get(IssuesViewModel::class.java)
 
         fab.setOnClickListener { showCreateNewIssueDialog() }
 
