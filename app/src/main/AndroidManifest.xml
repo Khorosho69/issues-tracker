@@ -24,6 +24,10 @@
             android:label="@string/nav_menu_all_issues"
             android:theme="@style/AppTheme.NoActionBar" />
 
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="ef4cf88632bfaf1187b5711e9cfc09b4b1ea974e" />
+
         <service
             android:name=".services.NotificationFirebaseService"
             android:enabled="true"

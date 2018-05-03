@@ -10,10 +10,7 @@ import android.widget.Toast
 import com.antont.issuestracker.models.Comment
 import com.antont.issuestracker.models.Issue
 import com.antont.issuestracker.models.User
-import com.google.android.gms.common.data.DataBufferObserver
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import kotlinx.android.synthetic.main.fragment_issue_detail.*
 import java.util.*
 
 class IssueDetailViewModel(application: Application) : AndroidViewModel(application) {

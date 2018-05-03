@@ -15,7 +15,9 @@ import com.antont.issuestracker.fragments.CreateIssueDialog
 import com.antont.issuestracker.fragments.IssueListFragment.ListType
 import com.antont.issuestracker.models.User
 import com.antont.issuestracker.view_models.IssuesViewModel
+import com.crashlytics.android.Crashlytics
 import com.squareup.picasso.Picasso
+import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_issues.*
 import kotlinx.android.synthetic.main.nav_header_issues.view.*

@@ -7,6 +7,8 @@ import android.os.Bundle
 import com.antont.issuestracker.R
 import com.antont.issuestracker.view_models.LoginViewModel
 import kotlinx.android.synthetic.main.activity_login.*
+import com.crashlytics.android.Crashlytics
+import io.fabric.sdk.android.Fabric
 
 class LoginActivity : AppCompatActivity() {
 
@@ -14,6 +16,9 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Fabric.with(this, Crashlytics())
+
         setContentView(R.layout.activity_login)
 
         mLoginViewModel = ViewModelProviders.of(this).get(LoginViewModel::class.java)
