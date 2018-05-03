@@ -5,8 +5,10 @@ import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.content.Intent
+import android.databinding.ObservableInt
 import android.net.ConnectivityManager
 import android.support.v4.app.FragmentManager
+import android.view.View
 import android.widget.Toast
 import com.antont.issuestracker.R
 import com.antont.issuestracker.activities.LoginActivity
@@ -22,6 +24,9 @@ import com.google.firebase.database.*
 import java.util.*
 
 class IssuesViewModel(application: Application) : AndroidViewModel(application) {
+
+    var recyclerViewVisibility = ObservableInt(View.GONE)
+    var progressBarVisibility = ObservableInt(View.VISIBLE)
 
     private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().reference.child("issues")
     private var queryReference: Query = databaseReference.orderByChild("owner").equalTo(FirebaseAuth.getInstance().currentUser?.uid)
@@ -49,6 +54,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
             dataSnapshot?.let {
                 val issue = getIssueFromDataSnapshot(dataSnapshot)
                 issueList.add(issue)
+                showProgress(false)
                 fetchIssueOwner(issueList.last())
             }
         }
@@ -60,7 +66,7 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
         if (isDeviceOnline()) {
 
             issueList.clear()
-
+            showProgress(true)
             removeValueListener()
 
             if (listType == ListType.MY_ISSUES) {
@@ -182,6 +188,11 @@ class IssuesViewModel(application: Application) : AndroidViewModel(application) 
                 .addToBackStack(IssueListFragment.FRAGMENT_TAG)
                 .commit()
 
+    }
+
+    private fun showProgress(isLoading: Boolean) {
+        recyclerViewVisibility.set(if (isLoading) View.GONE else View.VISIBLE)
+        progressBarVisibility.set(if (isLoading) View.VISIBLE else View.GONE)
     }
 
     override fun onCleared() {
